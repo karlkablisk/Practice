@@ -21,7 +21,7 @@ if nested_button_outer:
 st.write(f"Session state after nested update: {st.session_state['count']}")
 
 # Variation 2v2: Nested Button Update
-st.write("### Variation 2: Nested Button Update")
+st.write("### Variation 2v2: Nested Button Update")
 nested_button_outer = st.button('Press Me - Nested Update (Outer)')
 if nested_button_outer:
     st.session_state['outer_clicked'] = True
@@ -33,6 +33,8 @@ if 'outer_clicked' in st.session_state and st.session_state['outer_clicked']:
         st.session_state['outer_clicked'] = False  # Reset the state
 
 st.write(f"Session state after nested update: {st.session_state['count']}")
+
+
 
 # Define functions for further variations
 def update_count():
