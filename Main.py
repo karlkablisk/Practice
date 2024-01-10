@@ -39,6 +39,7 @@ count_placeholder.write(f"First display of count: {st.session_state['count']}")
 ### end
 
 #start
+
 # Variation 2v3: Nested Button Update with Label Change
 st.write("### Variation 2v3: Nested Button Update with Label Change")
 
@@ -48,6 +49,15 @@ labels = ["cool", "green", "fun"]
 # Initialize the label index in the session state
 if 'label_index' not in st.session_state:
     st.session_state['label_index'] = 0
+
+# Increment label index function
+def increment_label_index():
+    st.session_state['label_index'] = (st.session_state['label_index'] + 1) % len(labels)
+
+# Check and update for inner button click
+if 'inner_clicked_v2v3' in st.session_state and st.session_state['inner_clicked_v2v3']:
+    increment_label_index()
+    st.session_state['inner_clicked_v2v3'] = False
 
 # Get the current label
 current_label = labels[st.session_state['label_index']]
@@ -63,19 +73,11 @@ if nested_button_outer:
 if 'outer_clicked_v2v3' in st.session_state and st.session_state['outer_clicked_v2v3']:
     nested_button_inner = st.button('Press Me - Nested Update (Inner)', key='inner_button_v2v3')
     if nested_button_inner:
-        # Increment the label index and reset it to 0 if it's out of range
-        st.session_state['label_index'] = (st.session_state['label_index'] + 1) % len(labels)
         st.session_state['inner_clicked_v2v3'] = True
 
-        # Update the outer button with the new label
-        current_label = labels[st.session_state['label_index']]
-        outer_button_placeholder.button(current_label, key='outer_button_v2v3')
-
-if 'inner_clicked_v2v3' in st.session_state and st.session_state['inner_clicked_v2v3']:
-    st.session_state['outer_clicked_v2v3'] = True
-
 # Display the current label
-st.write(f"Current label: {labels[st.session_state['label_index']]}")
+st.write(f"Current label: {current_label}")
+
 ### end
 
 
