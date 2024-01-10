@@ -1,15 +1,5 @@
 import streamlit as st
 
-# This will be incremented every time the script runs
-st.session_state['count1'] += 1
-
-if st.button('Increment count2'):
-    # This will only be incremented when the button is clicked
-    st.session_state['count2'] += 1
-
-st.write(f"Count1: {st.session_state['count1']}")
-st.write(f"Count2: {st.session_state['count2']}")
-
 # Initialize session state
 if 'count' not in st.session_state:
     st.session_state['count'] = 0
@@ -32,12 +22,12 @@ st.write(f"Session state after nested update: {st.session_state['count']}")
 
 # Variation 2v2: Nested Button Update
 st.write("### Variation 2v2: Nested Button Update")
-nested_button_outer = st.button('Press Me - Nested Update (Outer)')
+nested_button_outer = st.button('Press Me - Nested Update (Outer)', key='outer_button')
 if nested_button_outer:
     st.session_state['outer_clicked'] = True
 
 if 'outer_clicked' in st.session_state and st.session_state['outer_clicked']:
-    nested_button_inner = st.button('Press Me - Nested Update (Inner)')
+    nested_button_inner = st.button('Press Me - Nested Update (Inner)', key='inner_button')
     if nested_button_inner:
         st.session_state['count'] += 1
         st.session_state['outer_clicked'] = False  # Reset the state
