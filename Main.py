@@ -48,7 +48,7 @@ if 'count' not in st.session_state:
 def increment_count():
     st.session_state['count'] += 1
 
-# Variation 1: Single Button Update
+# Variation 2: Single Button Update
 st.write("### Variation 2v2 alt: update number with on click event")
 single_button = st.button('Press Me - Single Update', on_click=increment_count)
 st.write(f"Session state after single update: {st.session_state['count']}")
@@ -57,11 +57,11 @@ st.write(f"Session state after single update: {st.session_state['count']}")
 st.write("### Variation 2v2: Nested Button Update numbers")
 nested_button_outer = st.button('Press Me - Nested Update (Outer)', 
                                 on_click=increment_count, 
-                                key='outer_button')
+                                key='outer_button2v2n')
 
 nested_button_inner = st.button('Press Me - Nested Update (Inner)', 
                                 on_click=increment_count, 
-                                key='inner_button')
+                                key='inner_button2v2n')
 
 # Display the current count
 st.write(f"Current count: {st.session_state['count']}")
