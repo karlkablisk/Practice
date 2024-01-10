@@ -3,6 +3,10 @@ import streamlit as st
 # Initialize session state
 if 'count' not in st.session_state:
     st.session_state['count'] = 0
+    
+st.write(f"First display of count: {st.session_state['count']}")
+
+count_placeholder = st.empty()
 
 # Variation 1: Single Button Update
 st.write("### Variation 1: Single Button Update")
@@ -10,15 +14,6 @@ single_button = st.button('Press Me - Single Update')
 if single_button:
     st.session_state['count'] += 1
 st.write(f"Session state after single update: {st.session_state['count']}")
-
-# Variation 2: Nested Button Update
-st.write("### Variation 2: Nested Button Update")
-nested_button_outer = st.button('Press Me - Nested Update (Outer)')
-if nested_button_outer:
-    nested_button_inner = st.button('Press Me - Nested Update (Inner)')
-    if nested_button_inner:
-        st.session_state['count'] += 1
-st.write(f"Session state after nested update: {st.session_state['count']}")
 
 # Variation 2v2: Nested Button Update
 st.write("### Variation 2v2: Nested Button Update")
@@ -35,7 +30,8 @@ if 'outer_clicked' in st.session_state and st.session_state['outer_clicked']:
 if 'inner_clicked' in st.session_state and st.session_state['inner_clicked']:
     st.session_state['outer_clicked'] = True
 
-st.write(f"Session state after nested update: {st.session_state['count']}")
+# Update the placeholder with the current count
+count_placeholder.write(f"First display of count: {st.session_state['count']}")
 
 
 
