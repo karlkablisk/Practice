@@ -39,8 +39,6 @@ count_placeholder.write(f"First display of count: {st.session_state['count']}")
 ### end
 
 #start
-import streamlit as st
-
 # Variation 2v3: Nested Button Update with Label Change
 st.write("### Variation 2v3: Nested Button Update with Label Change")
 
@@ -51,25 +49,22 @@ labels = ["cool", "green", "fun"]
 if 'label_index' not in st.session_state:
     st.session_state['label_index'] = 0
 
-# Function to increment the label index
-def increment_label_index():
+# Callback function to increment the label index
+def on_click_updater():
     st.session_state['label_index'] = (st.session_state['label_index'] + 1) % len(labels)
 
-# Create the inner button and handle its logic
-if st.button('Press Me - Nested Update (Inner)', key='inner_button_v2v3'):
-    increment_label_index()
+# Create buttons with on_click parameter
+nested_button_outer = st.button(labels[st.session_state['label_index']], 
+                                on_click=on_click_updater, 
+                                key='outer_button_v2v3')
 
-# Create a placeholder for the outer button
-outer_button_placeholder = st.empty()
+nested_button_inner = st.button('Press Me - Nested Update (Inner)', 
+                                on_click=on_click_updater, 
+                                key='inner_button_v2v3')
 
-# Check if the outer button is clicked and update label index
-if outer_button_placeholder.button("Next Label: " + labels[st.session_state['label_index']], key='outer_button_v2v3'):
-    increment_label_index()
-
-# Create an additional button to test label synchronization
-additional_button_label = labels[st.session_state['label_index']]
-if st.button(additional_button_label, key='additional_button'):
-    increment_label_index()
+additional_button = st.button('Additional Button', 
+                              on_click=on_click_updater, 
+                              key='additional_button')
 
 # Display the current label
 st.write(f"Current label: {labels[st.session_state['label_index']]}")
