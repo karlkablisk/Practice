@@ -1,5 +1,15 @@
 import streamlit as st
 
+# This will be incremented every time the script runs
+st.session_state['count1'] += 1
+
+if st.button('Increment count2'):
+    # This will only be incremented when the button is clicked
+    st.session_state['count2'] += 1
+
+st.write(f"Count1: {st.session_state['count1']}")
+st.write(f"Count2: {st.session_state['count2']}")
+
 # Initialize session state
 if 'count' not in st.session_state:
     st.session_state['count'] = 0
