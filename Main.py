@@ -30,7 +30,10 @@ if 'outer_clicked' in st.session_state and st.session_state['outer_clicked']:
     nested_button_inner = st.button('Press Me - Nested Update (Inner)', key='inner_button')
     if nested_button_inner:
         st.session_state['count'] += 1
-        st.session_state['outer_clicked'] = False  # Reset the state
+        st.session_state['inner_clicked'] = True
+
+if 'inner_clicked' in st.session_state and st.session_state['inner_clicked']:
+    st.session_state['outer_clicked'] = True
 
 st.write(f"Session state after nested update: {st.session_state['count']}")
 
