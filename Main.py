@@ -6,7 +6,7 @@ if 'count' not in st.session_state:
     
 st.write(f"First display of count: {st.session_state['count']}")
 
-count_placeholder = st.empty()
+
 
 # Variation 1: Single Button Update
 st.write("### Variation 1: Single Button Update")
@@ -14,6 +14,10 @@ single_button = st.button('Press Me - Single Update')
 if single_button:
     st.session_state['count'] += 1
 st.write(f"Session state after single update: {st.session_state['count']}")
+
+
+#placeholder placed  before the button that triggers it
+count_placeholder = st.empty()
 
 # Variation 2v2: Nested Button Update
 st.write("### Variation 2v2: Nested Button Update")
