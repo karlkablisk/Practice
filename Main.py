@@ -55,15 +55,20 @@ if 'label_index' not in st.session_state:
 def increment_label_index():
     st.session_state['label_index'] = (st.session_state['label_index'] + 1) % len(labels)
 
+# Create the inner button and handle its logic
+if st.button('Press Me - Nested Update (Inner)', key='inner_button_v2v3'):
+    increment_label_index()
+
 # Create a placeholder for the outer button
 outer_button_placeholder = st.empty()
 
-# Check if the outer button is clicked
-if outer_button_placeholder.button(labels[st.session_state['label_index']], key='outer_button_v2v3'):
+# Check if the outer button is clicked and update label index
+if outer_button_placeholder.button("Next Label: " + labels[st.session_state['label_index']], key='outer_button_v2v3'):
     increment_label_index()
 
-# Create the inner button and handle its logic
-if st.button('Press Me - Nested Update (Inner)', key='inner_button_v2v3'):
+# Create an additional button to test label synchronization
+additional_button_label = labels[st.session_state['label_index']]
+if st.button(additional_button_label, key='additional_button'):
     increment_label_index()
 
 # Display the current label
