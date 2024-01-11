@@ -37,69 +37,68 @@ audio_html = f"""<audio controls autoplay><source src="data:audio/mp3;base64,{au
 if st.button("Click me for unrelated action"):
     st.write("Unrelated action triggered")
     
-# Method 1: Using Session State Toggle
-st.write("Method 1: Using Session State Toggle")
-if st.session_state['show_audio']:
-    st.markdown(audio_html, unsafe_allow_html=True)
-st.session_state['show_audio'] = not st.session_state['show_audio']
+# Method 1
+st.write("Method 1: Using an empty container")
+audio_container = st.empty()
+audio_container.markdown(audio_html, unsafe_allow_html=True)
+audio_container.empty()
 
-# Method 2: Rendering Inside a Text Element
-st.write("Method 2: Rendering Inside a Text Element")
-if st.session_state['show_audio']:
-    st.text('Audio below:')
-    st.markdown(audio_html, unsafe_allow_html=True)
-
-# Method 3: Using a Checkbox to Control Display
-st.write("Method 3: Using a Checkbox to Control Display")
-if st.checkbox("Show Audio", value=st.session_state['show_audio']):
+# Method 2
+st.write("Method 2: Randomly displaying the audio")
+import random
+if random.randint(0, 1) == 0:
     st.markdown(audio_html, unsafe_allow_html=True)
 
-# Method 4: Conditional Rendering Inside a Function
-st.write("Method 4: Conditional Rendering Inside a Function")
-def render_audio():
-    if st.session_state['show_audio']:
-        st.markdown(audio_html, unsafe_allow_html=True)
-render_audio()
+# Method 3
+st.write("Method 3: Delayed display of the audio")
+import time
+time.sleep(1)
+st.markdown(audio_html, unsafe_allow_html=True)
 
-# Method 5: Using a Placeholder
-st.write("Method 5: Using a Placeholder")
-placeholder = st.empty()
-if st.session_state['show_audio']:
-    placeholder.markdown(audio_html, unsafe_allow_html=True)
-
-# Method 6: Using a Custom Button to Control Audio
-st.write("Method 6: Using a Custom Button to Control Audio")
-if st.button("Toggle Audio", key="toggle_audio"):
-    st.session_state['show_audio'] = not st.session_state['show_audio']
-if st.session_state['show_audio']:
+# Method 4
+st.write("Method 4: Displaying the audio based on the current minute")
+import datetime
+if datetime.datetime.now().minute % 2 == 0:
     st.markdown(audio_html, unsafe_allow_html=True)
 
-# Method 7: Rendering Audio in a Sidebar
-st.write("Method 7: Rendering Audio in a Sidebar")
-if st.session_state['show_audio']:
-    with st.sidebar:
-        st.markdown(audio_html, unsafe_allow_html=True)
-
-# Method 8: Conditional Rendering with a Slider
-st.write("Method 8: Conditional Rendering with a Slider")
-if st.slider("Volume", 0, 100, 50) > 50:
+# Method 5
+st.write("Method 5: Displaying the audio based on user input length")
+user_input = st.text_input("Enter some text")
+if len(user_input) > 5:
     st.markdown(audio_html, unsafe_allow_html=True)
 
-# Method 9: Using Session State with Key-Value Pair
-st.write("Method 9: Using Session State with Key-Value Pair")
+# Method 6
+st.write("Method 6: Displaying the audio in an expander")
+with st.expander("Expand for audio"):
+    st.markdown(audio_html, unsafe_allow_html=True)
+
+# Method 7
+st.write("Method 7: Displaying the audio in the sidebar")
+with st.sidebar:
+    st.markdown(audio_html, unsafe_allow_html=True)
+
+# Method 8
+st.write("Method 8: Displaying the audio based on a counter in session state")
+if 'counter' not in st.session_state:
+    st.session_state['counter'] = 0
+st.session_state['counter'] += 1
+if st.session_state['counter'] % 3 == 0:
+    st.markdown(audio_html, unsafe_allow_html=True)
+
+# Method 9
+st.write("Method 9: Toggling the audio display with session state")
+if 'toggle_audio' not in st.session_state:
+    st.session_state['toggle_audio'] = False
+if st.session_state['toggle_audio']:
+    st.markdown(audio_html, unsafe_allow_html=True)
+
+# Method 10
+st.write("Method 10: Displaying the audio based on a flag in session state")
 if 'audio_rendered' not in st.session_state:
-    st.session_state['audio_rendered'] = st.session_state['show_audio']
+    st.session_state['audio_rendered'] = False
 if st.session_state['audio_rendered']:
     st.markdown(audio_html, unsafe_allow_html=True)
-    st.session_state['audio_rendered'] = False
-
-# Method 10: Rendering Inside a Custom Function with Argument
-st.write("Method 10: Rendering Inside a Custom Function with Argument")
-def render_audio_conditional(show):
-    if show:
-        st.markdown(audio_html, unsafe_allow_html=True)
-render_audio_conditional(st.session_state['show_audio'])
-
+    
 # Method 6v2: Using a Custom Button to Control Audio
 st.write("Method 6v2: Using a Custom Button to Control Audio")
 if st.button("Toggle Audio"):
