@@ -76,7 +76,8 @@ def play_song(song_sequence):
 
 
 ## SONGS
-# Example song sequence
+
+st.write("Twinkle Twinkle Little Star")
 twinkle_twinkle_full = [
     ('C', 1), ('C', 1), ('G', 1), ('G', 1), ('A', 1), ('A', 1), ('G', 2),
     ('F', 1), ('F', 1), ('E', 1), ('E', 1), ('D', 1), ('D', 1), ('C', 2),
@@ -84,11 +85,9 @@ twinkle_twinkle_full = [
     ('C', 1), ('G', 1), ('Am', 1), ('F', 1),
     ('C', 1), ('G', 1), ('F', 1), ('C', 2),
 ]
-
-# Play the full song
-st.write("Twinkle Twinkle Little Star")
 play_song(twinkle_twinkle_full)
 
+st.write("AI original song 1")
 song_sequence = [
     ('C', 1), ('E', 0.5), ('G', 0.5),  # C major chord and melody
     ('Am', 1), ('C', 0.5), ('E', 0.5),  # A minor chord and melody
@@ -100,13 +99,37 @@ song_sequence = [
     ('F', 1), ('A', 0.5), ('C', 0.5),
     ('G', 1), ('B', 0.5), ('D', 0.5),
 ]
+play_song(song_sequence)
 
-st.write("AI original song 1")
-# Play the song
+st.write("AI point and click game song")
+loop_sequence = [
+    ('Am', 1), ('A', 0.5), ('C', 0.5),  # A minor chord and melody
+    ('Dm', 1), ('D', 0.5), ('F', 0.5),  # D minor chord and melody
+    ('E', 1), ('E', 0.5), ('G', 0.5),   # E major chord and melody
+    ('Am', 1), ('A', 0.5), ('C', 0.5),  # A minor chord and melody
+    ('F', 1), ('F', 0.5), ('A', 0.5),   # F major chord and melody
+    ('C', 1), ('C', 0.5), ('E', 0.5),   # C major chord and melody
+    ('G', 1), ('G', 0.5), ('B', 0.5),   # G major chord and melody
+    ('E', 1), ('E', 0.5), ('G', 0.5),   # E major chord and melody
+]
+song_sequence = loop_sequence * 6  # Repeating 6 times for around 60 seconds
 play_song(song_sequence)
 
 
+
+
+
+
+
+
+
+#######################################################################
+
 st.markdown("---")
+
+
+
+
 st.write("early tests")
 
 st.write("test")
