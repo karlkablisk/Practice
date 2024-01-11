@@ -64,7 +64,7 @@ if st.session_state['show_audio']:
     placeholder.write(audio_html)
 
 # Method 6: Using a Custom Button to Control Audio
-if st.button("Toggle Audio"):
+if st.button("Toggle Audio", key="toggle_audio"):
     st.session_state['show_audio'] = not st.session_state['show_audio']
 if st.session_state['show_audio']:
     st.markdown(audio_html, unsafe_allow_html=True)
