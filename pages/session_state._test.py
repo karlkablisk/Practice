@@ -8,7 +8,7 @@ st.write("Session state and button testing")
 if 'count' not in st.session_state:
     st.session_state['count'] = 0
     
-st.write(f"First display of count: {st.session_state['count']}")
+st.write(f"First display of count1: {st.session_state['count']}")
 
 
 
@@ -61,7 +61,7 @@ if 'inner_clicked' in st.session_state and st.session_state['inner_clicked']:
     st.session_state['outer_clicked'] = True
 
 # Update the placeholder with the current count
-count_placeholder.write(f"First display of count: {st.session_state['count']}")
+count_placeholder.write(f"First display of count2: {st.session_state['count']}")
 ### end
 
 ## start
