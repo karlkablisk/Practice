@@ -9,10 +9,19 @@ st.header("Song Maker")
 sample_rate = 44100  # 44100 samples per second
 base_duration = 0.4  # Base note duration
 
-def generate_note(frequency):
-    t = np.linspace(0, seconds, int(seconds * sample_rate), False)
-    note = np.sin(frequency * t * 2 * np.pi)
-    return note
+def generate_note(frequency, duration_multiplier=1):
+    duration = base_duration * duration_multiplier
+    t = np.linspace(0, duration, int(duration * sample_rate), False)
+    return np.sin(frequency * t * 2 * np.pi)
+
+# Function to generate a chord (multiple notes played together)
+def generate_chord(notes, duration_multiplier=1):
+    chord = np.zeros(int(base_duration * duration_multiplier * sample_rate))
+    for note in notes:
+        chord += generate_note(frequencies[note], duration_multiplier)
+    return chord / len(notes)  # Normalize the amplitude
+
+
 
 # Frequencies for different notes (A4, B4, C5, etc.)
 frequencies = {
@@ -98,12 +107,7 @@ def generate_note(frequency, duration_multiplier=1):
     t = np.linspace(0, duration, int(duration * sample_rate), False)
     return np.sin(frequency * t * 2 * np.pi)
 
-# Function to generate a chord (multiple notes played together)
-def generate_chord(notes, duration_multiplier=1):
-    chord = np.zeros(int(base_duration * duration_multiplier * sample_rate))
-    for note in notes:
-        chord += generate_note(frequencies[note], duration_multiplier)
-    return chord / len(notes)  # Normalize the amplitude
+
 
 # Function to play a fantasy song
 def play_song():
