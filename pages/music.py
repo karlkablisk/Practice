@@ -125,16 +125,11 @@ st.audio(melody, sample_rate=sample_rate)
 ## song test end
 
 st.write("test 2")
-# Function to generate a single note with variable duration
-def generate_note(frequency, duration_multiplier=1):
-    duration = base_duration * duration_multiplier
-    t = np.linspace(0, duration, int(duration * sample_rate), False)
-    return np.sin(frequency * t * 2 * np.pi)
 
 
 
 # Function to play a fantasy song
-def play_song():
+def play_song_test():
     melody = []
 
     # Example melody
@@ -155,4 +150,4 @@ def play_song():
     st.audio(song, sample_rate=sample_rate)
 
 # Call the function to play the song
-play_song()
+play_song_test()
