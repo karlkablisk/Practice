@@ -27,9 +27,9 @@ count_placeholder = st.empty()
 
 # Variation 2: Nested Button Update
 st.write("### Variation 2: Nested Button Update")
-nested_button_outer = st.button('Press Me - Nested Update (Outer)')
+nested_button_outer = st.button('Press Me - Nested Update (Outer)', key=nouter1)
 if nested_button_outer:
-    nested_button_inner = st.button('Press Me - Nested Update (Inner)')
+    nested_button_inner = st.button('Press Me - Nested Update (Inner)', key=ninner1)
     if nested_button_inner:
         st.session_state['count'] += 1
 st.write(f"Session state after nested update: {st.session_state['count']}")
@@ -76,7 +76,7 @@ def increment_count():
 
 # Variation 2: Single Button Update
 st.write("### Variation 2v2 alt: update number with on click event")
-single_button = st.button('Press Me - Single Update', on_click=increment_count, key='a_button1')
+single_button = st.button('Press Me - Single Update', on_click=increment_count, key='a_button2')
 st.write(f"Session state after single update: {st.session_state['count']}")
 
 # Variation 2v2: Nested Button Update numbers
