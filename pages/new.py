@@ -29,31 +29,58 @@ if st.button("Change Audio"):
 # Fetch and encode audio
 audio_base64 = fetch_and_encode_audio(audio_sources[st.session_state['audio_index']])
 
-# Method 1: Simple if condition
+# Methods for conditional rendering of audio element
+
+# Method 1: Using Session State Toggle
 if st.session_state['show_audio']:
-    audio_html = f"""<audio controls autoplay><source src="data:audio/mp3;base64,{audio_base64}" type="audio/mp3"></audio>"""
+    st.markdown(audio_html, unsafe_allow_html=True)
+st.session_state['show_audio'] = not st.session_state['show_audio']
+
+# Method 2: Rendering Inside a Text Element
+if st.session_state['show_audio']:
+    st.text('Audio below:')
     st.markdown(audio_html, unsafe_allow_html=True)
 
-# Method 2: Inside a container
-with st.container():
+# Method 3: Using a Checkbox to Control Display
+if st.checkbox("Show Audio", value=st.session_state['show_audio']):
+    st.markdown(audio_html, unsafe_allow_html=True)
+
+# Method 4: Conditional Rendering Inside a Function
+def render_audio():
     if st.session_state['show_audio']:
+        st.markdown(audio_html, unsafe_allow_html=True)
+render_audio()
+
+# Method 5: Using a Placeholder
+placeholder = st.empty()
+if st.session_state['show_audio']:
+    placeholder.markdown(audio_html, unsafe_allow_html=True)
+
+# Method 6: Using a Custom Button to Control Audio
+if st.button("Toggle Audio"):
+    st.session_state['show_audio'] = not st.session_state['show_audio']
+if st.session_state['show_audio']:
+    st.markdown(audio_html, unsafe_allow_html=True)
+
+# Method 7: Rendering Audio in a Sidebar
+if st.session_state['show_audio']:
+    with st.sidebar:
         st.markdown(audio_html, unsafe_allow_html=True)
 
-# Method 3: Column layout
-col1, col2 = st.columns(2)
-with col1:
-    if st.session_state['show_audio']:
-        st.markdown(audio_html, unsafe_allow_html=True)
+# Method 8: Conditional Rendering with a Slider
+if st.slider("Volume", 0, 100, 50) > 50:
+    st.markdown(audio_html, unsafe_allow_html=True)
 
-# Method 4: Expander
-with st.expander("Audio Expander"):
-    if st.session_state['show_audio']:
-        st.markdown(audio_html, unsafe_allow_html=True)
+# Method 9: Using Session State with Key-Value Pair
+if 'audio_rendered' not in st.session_state:
+    st.session_state['audio_rendered'] = st.session_state['show_audio']
+if st.session_state['audio_rendered']:
+    st.markdown(audio_html, unsafe_allow_html=True)
+    st.session_state['audio_rendered'] = False
 
-# Method 5: Tabs
-tab1, tab2 = st.tabs(["Tab 1", "Tab 2"])
-with tab1:
-    st.write("This is tab 1.")
-with tab2:
-    if st.session_state['show_audio']:
+# Method 10: Rendering Inside a Custom Function with Argument
+def render_audio_conditional(show):
+    if show:
         st.markdown(audio_html, unsafe_allow_html=True)
+render_audio_conditional(st.session_state['show_audio'])
+
