@@ -86,6 +86,10 @@ def play_song():
     # Convert list to numpy array and play it
     song = np.concatenate(melody)
     st.audio(song, sample_rate=sample_rate)
+    
+    # Convert list to numpy array and play it
+    #song = np.hstack(melody)
+    #st.audio(song, sample_rate=sample_rate)
 
 # Call the function to play the song
 play_song()
