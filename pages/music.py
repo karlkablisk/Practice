@@ -3,27 +3,6 @@ import numpy as np
 
 st.header("Song Maker")
 
-st.write("test")
-# Function to generate a single note
-def generate_note(frequency):
-    t = np.linspace(0, seconds, int(seconds * sample_rate), False)
-    note = np.sin(frequency * t * 2 * np.pi)
-    return note
-
-# Melody: sequence of notes
-melody_notes = ['C', 'D', 'E', 'C', 'E', 'D', 'C']
-
-# Generate melody
-melody = np.concatenate([generate_note(frequencies[note]) for note in melody_notes])
-
-# Play the melody
-st.audio(melody, sample_rate=sample_rate)
-
-## song test end
-
-
-st.write("song 2 test")
-
 #🎸🎸
 
 # Sample rate and base note duration
@@ -60,14 +39,18 @@ chords = {
 def play_song(song_sequence):
     melody = []
     for element in song_sequence:
-        if isinstance(element, tuple):
-            note_or_chord, duration = element
-            if note_or_chord in frequencies:  # It's a note
-                melody.extend(generate_note(frequencies[note_or_chord], duration))
+        note_or_chord, duration_multiplier = element
+        if isinstance(note_or_chord, str):  # Single note or chord shorthand
+            if note_or_chord in frequencies:  # It's a single note
+                melody.extend(generate_note(frequencies[note_or_chord], duration_multiplier))
             elif note_or_chord in chords:  # It's a chord shorthand
-                melody.extend(generate_chord([frequencies[note] for note in chords[note_or_chord]], duration))
+                melody.extend(generate_chord([frequencies[note] for note in chords[note_or_chord]], duration_multiplier))
+        elif isinstance(note_or_chord, list):  # Explicit list of notes (custom chord)
+            melody.extend(generate_chord([frequencies[note] for note in note_or_chord], duration_multiplier))
+
     song = np.concatenate(melody)
     st.audio(song, sample_rate=sample_rate)
+
 
 
 ## SONGS
@@ -81,9 +64,32 @@ twinkle_twinkle_full = [
 ]
 
 # Play the full song
+st.write("Twinkle Twinkle Little Star")
 play_song(twinkle_twinkle_full)
 
 
+st.markup("---")
+st.write("early tests")
+
+st.write("test")
+# Function to generate a single note
+def generate_note(frequency):
+    t = np.linspace(0, seconds, int(seconds * sample_rate), False)
+    note = np.sin(frequency * t * 2 * np.pi)
+    return note
+
+# Melody: sequence of notes
+melody_notes = ['C', 'D', 'E', 'C', 'E', 'D', 'C']
+
+# Generate melody
+melody = np.concatenate([generate_note(frequencies[note]) for note in melody_notes])
+
+# Play the melody
+st.audio(melody, sample_rate=sample_rate)
+
+## song test end
+
+st.write("test 2")
 # Function to generate a single note with variable duration
 def generate_note(frequency, duration_multiplier=1):
     duration = base_duration * duration_multiplier
