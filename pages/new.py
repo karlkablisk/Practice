@@ -29,7 +29,9 @@ if st.button("Change Audio"):
 # Fetch and encode audio
 audio_base64 = fetch_and_encode_audio(audio_sources[st.session_state['audio_index']])
 
+# Define the audio HTML element
 audio_html = f"""<audio controls autoplay><source src="data:audio/mp3;base64,{audio_base64}" type="audio/mp3"></audio>"""
+
 
 # Method 1: Using Session State Toggle
 if st.session_state['show_audio']:
