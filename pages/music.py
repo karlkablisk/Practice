@@ -9,6 +9,11 @@ st.header("Song Maker")
 sample_rate = 44100  # 44100 samples per second
 base_duration = 0.4  # Base note duration
 
+def generate_note(frequency):
+    t = np.linspace(0, seconds, int(seconds * sample_rate), False)
+    note = np.sin(frequency * t * 2 * np.pi)
+    return note
+
 # Frequencies for different notes (A4, B4, C5, etc.)
 frequencies = {
     'A': 440.00,
@@ -73,10 +78,7 @@ st.write("early tests")
 
 st.write("test")
 # Function to generate a single note
-def generate_note(frequency):
-    t = np.linspace(0, seconds, int(seconds * sample_rate), False)
-    note = np.sin(frequency * t * 2 * np.pi)
-    return note
+
 
 # Melody: sequence of notes
 melody_notes = ['C', 'D', 'E', 'C', 'E', 'D', 'C']
