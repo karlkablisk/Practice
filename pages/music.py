@@ -1,24 +1,9 @@
 import streamlit as st
 import numpy as np
 
-st.write("Song Test")
+st.header("Song Maker")
 
-# Sample rate and note duration
-sample_rate = 44100  # 44100 samples per second
-seconds = 0.4  # Note duration of 0.4 seconds
-
-# Frequencies for different notes
-frequencies = {
-    'A': 440.00,
-    'B': 493.88,
-    'C': 523.25,
-    'D': 587.33,
-    'E': 659.25,
-    'F': 698.46,
-    'G': 783.99,
-    # Add more notes as needed
-}
-
+st.write("test")
 # Function to generate a single note
 def generate_note(frequency):
     t = np.linspace(0, seconds, int(seconds * sample_rate), False)
@@ -39,7 +24,7 @@ st.audio(melody, sample_rate=sample_rate)
 
 st.write("song 2 test")
 
-
+#🎸🎸
 
 # Sample rate and base note duration
 sample_rate = 44100  # 44100 samples per second
@@ -54,8 +39,50 @@ frequencies = {
     'E': 659.25,
     'F': 698.46,
     'G': 783.99,
+    'A#': 466.16, 'Bb': 466.16,
+    'C#': 554.37, 'Db': 554.37,
+    'D#': 622.25, 'Eb': 622.25,
+    'F#': 739.99, 'Gb': 739.99,
+    'G#': 830.61, 'Ab': 830.61,
     # Add more notes as needed
 }
+
+chords = {
+    'C': ['C', 'E', 'G'],
+    'Dm': ['D', 'F', 'A'],
+    'Em': ['E', 'G', 'B'],
+    'F': ['F', 'A', 'C'],
+    'G': ['G', 'B', 'D'],
+    'Am': ['A', 'C', 'E'],
+    # Add more chords as needed
+}
+
+def play_song(song_sequence):
+    melody = []
+    for element in song_sequence:
+        if isinstance(element, tuple):
+            note_or_chord, duration = element
+            if note_or_chord in frequencies:  # It's a note
+                melody.extend(generate_note(frequencies[note_or_chord], duration))
+            elif note_or_chord in chords:  # It's a chord shorthand
+                melody.extend(generate_chord([frequencies[note] for note in chords[note_or_chord]], duration))
+    song = np.concatenate(melody)
+    st.audio(song, sample_rate=sample_rate)
+
+
+## SONGS
+# Example song sequence
+twinkle_twinkle_full = [
+    ('C', 1), ('C', 1), ('G', 1), ('G', 1), ('A', 1), ('A', 1), ('G', 2),
+    ('F', 1), ('F', 1), ('E', 1), ('E', 1), ('D', 1), ('D', 1), ('C', 2),
+    # Adding a chord progression
+    ('C', 1), ('G', 1), ('Am', 1), ('F', 1),
+    ('C', 1), ('G', 1), ('F', 1), ('C', 2),
+]
+
+# Play the full song
+play_song(twinkle_twinkle_full)
+
 
 # Function to generate a single note with variable duration
 def generate_note(frequency, duration_multiplier=1):
