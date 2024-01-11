@@ -27,9 +27,9 @@ count_placeholder = st.empty()
 
 # Variation 2: Nested Button Update
 st.write("### Variation 2: Nested Button Update")
-nested_button_outer = st.button('Press Me - Nested Update (Outer)', key=nouter1)
+nested_button_outer = st.button('Press Me - Nested Update (Outer)', key='nouter1')
 if nested_button_outer:
-    nested_button_inner = st.button('Press Me - Nested Update (Inner)', key=ninner1)
+    nested_button_inner = st.button('Press Me - Nested Update (Inner)', key='ninner1')
     if nested_button_inner:
         st.session_state['count'] += 1
 st.write(f"Session state after nested update: {st.session_state['count']}")
