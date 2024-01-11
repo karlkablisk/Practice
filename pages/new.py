@@ -44,7 +44,7 @@ if st.session_state['play_audio']:
 
     # Define the audio HTML element
 if st.session_state['play_audio'] and st.session_state['counter'] % 3 == 0:
-     audio_html = f"""<audio controls autoplay><source src="data:audio/mp3;base64,{audio_base64}" type="audio/mp3"></audio>"""
+    audio_html = f"""<audio controls autoplay><source src="data:audio/mp3;base64,{audio_base64}" type="audio/mp3"></audio>"""
     st.markdown(audio_html, unsafe_allow_html=True)
     st.session_state['play_audio'] = False
 
@@ -55,6 +55,6 @@ if 'counter' not in st.session_state:
     st.session_state['counter'] = 0
 st.session_state['counter'] += 1
 if st.session_state['counter'] % 3 == 0:
-     audio_html = f"""<audio controls autoplay><source src="data:audio/mp3;base64,{audio_base64}" type="audio/mp3"></audio>"""
+    audio_html = f"""<audio controls autoplay><source src="data:audio/mp3;base64,{audio_base64}" type="audio/mp3"></audio>"""
    
     st.markdown(audio_html, unsafe_allow_html=True)
