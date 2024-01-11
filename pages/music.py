@@ -15,11 +15,12 @@ def generate_note(frequency, duration_multiplier=1):
     return np.sin(frequency * t * 2 * np.pi)
 
 # Function to generate a chord (multiple notes played together)
-def generate_chord(notes, duration_multiplier=1):
+def generate_chord(frequencies, duration_multiplier=1):
     chord = np.zeros(int(base_duration * duration_multiplier * sample_rate))
-    for note in notes:
-        chord += generate_note(frequencies[note], duration_multiplier)
-    return chord / len(notes)  # Normalize the amplitude
+    for frequency in frequencies:
+        chord += generate_note(frequency, duration_multiplier)
+    return chord / len(frequencies)  # Normalize the amplitude
+
 
 
 
@@ -58,12 +59,15 @@ def play_song(song_sequence):
             if note_or_chord in frequencies:  # It's a single note
                 melody.extend(generate_note(frequencies[note_or_chord], duration_multiplier))
             elif note_or_chord in chords:  # It's a chord shorthand
-                melody.extend(generate_chord([frequencies[note] for note in chords[note_or_chord]], duration_multiplier))
+                chord_frequencies = [frequencies[note] for note in chords[note_or_chord]]
+                melody.extend(generate_chord(chord_frequencies, duration_multiplier))
         elif isinstance(note_or_chord, list):  # Explicit list of notes (custom chord)
-            melody.extend(generate_chord([frequencies[note] for note in note_or_chord], duration_multiplier))
+            chord_frequencies = [frequencies[note] for note in note_or_chord]
+            melody.extend(generate_chord(chord_frequencies, duration_multiplier))
 
     song = np.concatenate(melody)
     st.audio(song, sample_rate=sample_rate)
+
 
 
 
