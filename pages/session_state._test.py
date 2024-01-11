@@ -20,7 +20,7 @@ if single_button:
 st.write(f"Session state after single update: {st.session_state['count']}")
 
 
-#placeholder placed  before the button that triggers it
+#placeholder placed  before the button that triggers it 2v2
 count_placeholder = st.empty()
 
 
