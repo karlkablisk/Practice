@@ -75,6 +75,8 @@ def play_song(song_sequence):
 
 
 
+
+
 ## SONGS
 
 st.write("Twinkle Twinkle Little Star")
@@ -85,7 +87,18 @@ twinkle_twinkle_full = [
     ('C', 1), ('G', 1), ('Am', 1), ('F', 1),
     ('C', 1), ('G', 1), ('F', 1), ('C', 2),
 ]
-play_song(twinkle_twinkle_full)
+
+twinkle_twinkle_fullv2 = [
+    ('C', 1), ('C', 1), ('G', 1), ('G', 1), ('A', 1), ('A', 1), ('G', 1),  # C major chord and melody
+    ('F', 1), ('F', 1), ('E', 1), ('E', 1), ('D', 1), ('D', 1), ('C', 1),  # F major chord and melody
+    ('G', 1), ('G', 1), ('F', 1), ('F', 1), ('E', 1), ('E', 1), ('D', 1),  # G major chord and melody
+    ('G', 1), ('G', 1), ('F', 1), ('F', 1), ('E', 1), ('E', 1), ('D', 1),  # G major chord and melody
+    ('C', 1), ('C', 1), ('G', 1), ('G', 1), ('A', 1), ('A', 1), ('G', 1),  # C major chord and melody
+    ('F', 1), ('F', 1), ('E', 1), ('E', 1), ('D', 1), ('D', 1), ('C', 1),  # F major chord and melody
+]
+
+
+play_song(twinkle_twinkle_fullv2)
 
 st.write("AI original song 1")
 song_sequence = [
