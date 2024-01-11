@@ -12,14 +12,17 @@ base_duration = 0.4  # Base note duration
 def generate_note(frequency, duration_multiplier=1):
     duration = base_duration * duration_multiplier
     t = np.linspace(0, duration, int(duration * sample_rate), False)
-    return np.sin(frequency * t * 2 * np.pi)
+    note = np.sin(frequency * t * 2 * np.pi)
+    return note  # This should be a one-dimensional array
+
 
 # Function to generate a chord (multiple notes played together)
 def generate_chord(frequencies, duration_multiplier=1):
     chord = np.zeros(int(base_duration * duration_multiplier * sample_rate))
     for frequency in frequencies:
         chord += generate_note(frequency, duration_multiplier)
-    return chord / len(frequencies)  # Normalize the amplitude
+    return chord  # This should be a one-dimensional array
+
 
 
 
@@ -57,16 +60,17 @@ def play_song(song_sequence):
         note_or_chord, duration_multiplier = element
         if isinstance(note_or_chord, str):  # Single note or chord shorthand
             if note_or_chord in frequencies:  # It's a single note
-                melody.extend(generate_note(frequencies[note_or_chord], duration_multiplier))
+                melody.append(generate_note(frequencies[note_or_chord], duration_multiplier))
             elif note_or_chord in chords:  # It's a chord shorthand
                 chord_frequencies = [frequencies[note] for note in chords[note_or_chord]]
-                melody.extend(generate_chord(chord_frequencies, duration_multiplier))
+                melody.append(generate_chord(chord_frequencies, duration_multiplier))
         elif isinstance(note_or_chord, list):  # Explicit list of notes (custom chord)
             chord_frequencies = [frequencies[note] for note in note_or_chord]
-            melody.extend(generate_chord(chord_frequencies, duration_multiplier))
+            melody.append(generate_chord(chord_frequencies, duration_multiplier))
 
     song = np.concatenate(melody)
     st.audio(song, sample_rate=sample_rate)
+
 
 
 
