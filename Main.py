@@ -1,4 +1,45 @@
 import streamlit as st
+import numpy as np
+
+st.write("Song Test")
+
+# Sample rate and note duration
+sample_rate = 44100  # 44100 samples per second
+seconds = 0.4  # Note duration of 0.4 seconds
+
+# Frequencies for different notes
+frequencies = {
+    'A': 440.00,
+    'B': 493.88,
+    'C': 523.25,
+    'D': 587.33,
+    'E': 659.25,
+    'F': 698.46,
+    'G': 783.99,
+    # Add more notes as needed
+}
+
+# Function to generate a single note
+def generate_note(frequency):
+    t = np.linspace(0, seconds, int(seconds * sample_rate), False)
+    note = np.sin(frequency * t * 2 * np.pi)
+    return note
+
+# Melody: sequence of notes
+melody_notes = ['C', 'D', 'E', 'C', 'E', 'D', 'C']
+
+# Generate melody
+melody = np.concatenate([generate_note(frequencies[note]) for note in melody_notes])
+
+# Play the melody
+st.audio(melody, sample_rate=sample_rate)
+
+## song test end
+
+
+## Button test with nesting and session state trials
+
+st.write("Session state and button testing")
 
 # Initialize session state
 if 'count' not in st.session_state:
@@ -18,6 +59,28 @@ st.write(f"Session state after single update: {st.session_state['count']}")
 
 #placeholder placed  before the button that triggers it
 count_placeholder = st.empty()
+
+
+
+# Variation 2: Nested Button Update
+st.write("### Variation 2: Nested Button Update")
+nested_button_outer = st.button('Press Me - Nested Update (Outer)')
+if nested_button_outer:
+    nested_button_inner = st.button('Press Me - Nested Update (Inner)')
+    if nested_button_inner:
+        st.session_state['count'] += 1
+st.write(f"Session state after nested update: {st.session_state['count']}")
+
+# Define functions for further variations
+def update_count():
+    st.session_state['count'] += 1
+    st.write(f"Session state inside function: {st.session_state['count']}")
+
+def nested_function():
+    update_count()
+    st.write(f"Session state inside nested function: {st.session_state['count']}")
+
+
 
 # Variation 2v2: Nested Button Update
 st.write("### Variation 2v2: Nested Button Update numbers")
