@@ -21,11 +21,6 @@ if 'audio_index' not in st.session_state:
 if 'show_audio' not in st.session_state:
     st.session_state['show_audio'] = True
 
-# Button to trigger a normal rerun
-if st.button("Change Audio"):
-    st.session_state['audio_index'] = (st.session_state['audio_index'] + 1) % len(audio_sources)
-    st.session_state['show_audio'] = not st.session_state['show_audio']
-
 # Fetch and encode audio
 audio_base64 = fetch_and_encode_audio(audio_sources[st.session_state['audio_index']])
 
