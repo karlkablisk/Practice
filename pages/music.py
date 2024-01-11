@@ -75,12 +75,12 @@ def play_song():
     melody = []
 
     # Example melody
-    melody.extend(generate_chord(['C', 'E', 'G'], 1.5))  # C Major chord
-    melody.extend(generate_note(frequencies['E'], 0.5))
-    melody.extend(generate_note(frequencies['G'], 0.75))
-    melody.extend(generate_note(frequencies['C'], 1))
-    melody.extend(generate_chord(['A', 'C', 'E'], 1.5))  # A Minor chord
-    melody.extend(generate_note(frequencies['A'], 0.5))
+    melody.append(generate_chord(['C', 'E', 'G'], 1.5))  # C Major chord
+    melody.append(generate_note(frequencies['E'], 0.5))
+    melody.append(generate_note(frequencies['G'], 0.75))
+    melody.append(generate_note(frequencies['C'], 1))
+    melody.append(generate_chord(['A', 'C', 'E'], 1.5))  # A Minor chord
+    melody.append(generate_note(frequencies['A'], 0.5))
     # Add more notes and chords as desired
 
     # Convert list to numpy array and play it

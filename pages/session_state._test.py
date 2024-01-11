@@ -14,7 +14,7 @@ st.write(f"First display of count: {st.session_state['count']}")
 
 # Variation 1: Single Button Update
 st.write("### Variation 1: Single Button Update")
-single_button = st.button('Press Me - Single Update')
+single_button = st.button('Press Me - Single Update', key='a_button1)
 if single_button:
     st.session_state['count'] += 1
 st.write(f"Session state after single update: {st.session_state['count']}")
@@ -76,7 +76,7 @@ def increment_count():
 
 # Variation 2: Single Button Update
 st.write("### Variation 2v2 alt: update number with on click event")
-single_button = st.button('Press Me - Single Update', on_click=increment_count)
+single_button = st.button('Press Me - Single Update', on_click=increment_count, key='a_button1)
 st.write(f"Session state after single update: {st.session_state['count']}")
 
 # Variation 2v2: Nested Button Update numbers
