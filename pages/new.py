@@ -29,9 +29,31 @@ if st.button("Change Audio"):
 # Fetch and encode audio
 audio_base64 = fetch_and_encode_audio(audio_sources[st.session_state['audio_index']])
 
-# Display audio based on session state
+# Method 1: Simple if condition
 if st.session_state['show_audio']:
-    audio_html = f"""<audio controls autoplay>
-                        <source src="data:audio/wav;base64,{audio_base64}" type="audio/mp3">
-                    </audio>"""
+    audio_html = f"""<audio controls autoplay><source src="data:audio/mp3;base64,{audio_base64}" type="audio/mp3"></audio>"""
     st.markdown(audio_html, unsafe_allow_html=True)
+
+# Method 2: Inside a container
+with st.container():
+    if st.session_state['show_audio']:
+        st.markdown(audio_html, unsafe_allow_html=True)
+
+# Method 3: Column layout
+col1, col2 = st.columns(2)
+with col1:
+    if st.session_state['show_audio']:
+        st.markdown(audio_html, unsafe_allow_html=True)
+
+# Method 4: Expander
+with st.expander("Audio Expander"):
+    if st.session_state['show_audio']:
+        st.markdown(audio_html, unsafe_allow_html=True)
+
+# Method 5: Tabs
+tab1, tab2 = st.tabs(["Tab 1", "Tab 2"])
+with tab1:
+    st.write("This is tab 1.")
+with tab2:
+    if st.session_state['show_audio']:
+        st.markdown(audio_html, unsafe_allow_html=True)
