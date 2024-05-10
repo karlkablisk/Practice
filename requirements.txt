@@ -1,0 +1,12 @@
+streamlit
+openai==1.28.0 # may 10 2024 - will need embeddings code update and testing but will have voice
+
+#new lanchain
+langchain==0.1.16
+langchain-community
+langchain-Core
+langchain_openai
+
+#vectorstore
+faiss-cpu==1.7.4
+fastembed
