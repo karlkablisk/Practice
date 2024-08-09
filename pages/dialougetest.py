@@ -4,7 +4,8 @@ from pydantic import BaseModel
 from openai import OpenAI
 import json
 from pathlib import Path
-from tts_voicegen import TTSVoiceGen
+from pages.tts_voicegen import TTSVoiceGen
+
 
 # Load OpenAI API key from the environment variable
 openai_api_key = os.getenv("OPENAI_API_KEY")
