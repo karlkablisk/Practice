@@ -12,8 +12,6 @@ class TTSVoiceGen:
         self.json_file = Path(json_file)
         self.speakers = self.load_speakers()
 
-
-
     def load_speakers(self):
         if self.json_file.exists():
             with open(self.json_file, 'r') as f:
@@ -36,11 +34,13 @@ class TTSVoiceGen:
         self.save_speakers()
 
     def generate_audio(self, speaker_name, text, file_path):
+        # Ensure we're always using the correct model
         speaker = self.speakers.get(speaker_name, self.speakers.get("default"))
         
         if not speaker:
             raise ValueError(f"No configuration found for speaker '{speaker_name}' and no default speaker configured.")
 
+        # Hardcode the model to "tts-1" to avoid any issues
         model = "tts-1"
         voice = speaker["voice"]
 
@@ -62,12 +62,11 @@ class TTSVoiceGen:
         except Exception as e:
             raise RuntimeError(f"Failed to generate audio for {speaker_name}: {e}\n{verbose_output}")
 
-
     def list_speakers(self):
         return list(self.speakers.keys())
 
-    def get_speaker_info(self):
-        return self.speakers
+    def get_speaker_info(self, speaker_name):
+        return self.speakers.get(speaker_name, None)
 
 # If running directly, show the management interface
 if __name__ == "__main__":
