@@ -33,23 +33,33 @@ class TTSVoiceGen:
         }
         self.save_speakers()
 
-    def generate_audio(self, speaker_name, text, file_path):
+    def generate_audio(self, speaker_name, text, file_path, verbose=True):
         if speaker_name not in self.speakers:
             raise ValueError(f"Speaker {speaker_name} not found.")
         
         speaker = self.speakers[speaker_name]
-        # Always use "tts-1" for generating audio
         model = "tts-1"
         voice = speaker["voice"]
 
+        if verbose:
+            diagnostic_info = (
+                f"Attempting to generate audio with the following parameters:\n"
+                f"Model: {model}\n"
+                f"Voice: {voice}\n"
+                f"Text: {text}\n"
+                f"File Path: {file_path}\n"
+            )
+            st.warning(diagnostic_info)
+
         try:
-            # Ensure text is correctly passed to the API
             response = self.client.audio.speech.create(
                 model=model,
                 voice=voice,
                 input=text
             )
             response.stream_to_file(file_path)
+            if verbose:
+                st.success(f"Audio generated successfully with the following diagnostics:\n{diagnostic_info}")
             return file_path
         except Exception as e:
             raise RuntimeError(f"Failed to generate audio for {speaker_name}: {e}")
@@ -87,9 +97,8 @@ if __name__ == "__main__":
             test_text = f"Hi, I'm {speaker_name}"
             file_path = Path(__file__).parent / f"{speaker_name}_test_audio.mp3"
             try:
-                tts_voicegen.generate_audio(speaker_name, test_text, file_path)
+                tts_voicegen.generate_audio(speaker_name, test_text, file_path, verbose=True)
                 st.audio(str(file_path), format="audio/mp3")
-                st.success(f"Test audio generated successfully for {speaker_name}.")
             except Exception as e:
                 st.error(f"Failed to generate test audio for {speaker_name}: {e}")
 
