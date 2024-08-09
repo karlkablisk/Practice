@@ -31,7 +31,7 @@ if st.button("Generate Structured Dialogue"):
     if input_text:
         # Prompt to send to the model
         prompt = (
-            "Structure the following conversation, marking unspoken lines as narrator:\n"
+            "Structure the following conversation, marking unspoken lines as narrator. omit lines with no spoken text.:\n"
             + input_text
         )
 
