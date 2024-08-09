@@ -1,7 +1,7 @@
 import os
 import json
 import streamlit as st
-from pathlib import Path
+from io import BytesIO
 from openai import OpenAI
 
 class TTSVoiceGen:
@@ -9,11 +9,11 @@ class TTSVoiceGen:
         self.client = OpenAI(api_key=api_key)
         self.tts_models = tts_models or ["tts-1"]  # Default to "tts-1" if not provided
         self.voices = voices or ["alloy", "echo", "fable", "onyx", "nova", "shimmer"]
-        self.json_file = Path(json_file)
+        self.json_file = json_file
         self.speakers = self.load_speakers()
 
     def load_speakers(self):
-        if self.json_file.exists():
+        if os.path.exists(self.json_file):
             with open(self.json_file, 'r') as f:
                 return json.load(f)
         else:
@@ -33,7 +33,7 @@ class TTSVoiceGen:
         }
         self.save_speakers()
 
-    def generate_audio(self, speaker_name, text, file_path, verbose=True):
+    def generate_audio(self, speaker_name, text, verbose=True):
         if speaker_name not in self.speakers:
             raise ValueError(f"Speaker {speaker_name} not found.")
         
@@ -47,7 +47,6 @@ class TTSVoiceGen:
                 f"Model: {model}\n"
                 f"Voice: {voice}\n"
                 f"Text: {text}\n"
-                f"File Path: {file_path}\n"
             )
             st.warning(diagnostic_info)
 
@@ -57,10 +56,12 @@ class TTSVoiceGen:
                 voice=voice,
                 input=text
             )
-            response.stream_to_file(file_path)
+
+            # Read the audio content into a BytesIO object for direct playback
+            audio_bytes = BytesIO(response.get_data())
             if verbose:
                 st.success(f"Audio generated successfully with the following diagnostics:\n{diagnostic_info}")
-            return file_path
+            return audio_bytes
         except Exception as e:
             raise RuntimeError(f"Failed to generate audio for {speaker_name}: {e}")
 
@@ -95,10 +96,9 @@ if __name__ == "__main__":
         # Test audio output
         if st.button(f"Test Voice for {speaker_name}"):
             test_text = f"Hi, I'm {speaker_name}"
-            file_path = Path(__file__).parent / f"{speaker_name}_test_audio.mp3"
             try:
-                tts_voicegen.generate_audio(speaker_name, test_text, file_path, verbose=True)
-                st.audio(str(file_path), format="audio/mp3")
+                audio_bytes = tts_voicegen.generate_audio(speaker_name, test_text, verbose=True)
+                st.audio(audio_bytes, format="audio/mp3")
             except Exception as e:
                 st.error(f"Failed to generate test audio for {speaker_name}: {e}")
 
