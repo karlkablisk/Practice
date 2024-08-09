@@ -47,7 +47,7 @@ if st.button("Generate Structured Dialogue"):
             "Structure the following conversation, marking unspoken lines as narrator:\n"
             + input_text
         )
-
+ 
         try:
             # API call with structured output
             completion = client.beta.chat.completions.parse(
