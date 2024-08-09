@@ -1,0 +1,17 @@
+{
+    "bob": {
+        "pic": "",
+        "voice_model": "openai",
+        "voice": "nova"
+    },
+    "narrator": {
+        "pic": "",
+        "voice_model": "openai",
+        "voice": "shimmer"
+    },
+    "default": {
+        "pic": "",
+        "voice_model": "openai",
+        "voice": "nova"
+    }
+}
