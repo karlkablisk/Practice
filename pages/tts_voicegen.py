@@ -23,15 +23,18 @@ class TTSVoiceGen:
         with open(self.json_file, 'w') as f:
             json.dump(self.speakers, f, indent=2)
 
-    def add_speaker(self, name, pic, selected_model="openai", voice="nova"):
-        # `selected_model` is stored in the JSON but not used for TTS generation.
+    def add_speaker(self, name, pic, voice_model="tts-1", voice="nova"):
+        # Only allow valid TTS models to be used when generating audio
+        if voice_model not in self.tts_models:
+            raise ValueError(f"Invalid voice model: {voice_model}")
         if voice not in self.voices:
             raise ValueError(f"Invalid voice: {voice}")
         
         self.speakers[name] = {
             "pic": pic,
-            "selected_model": selected_model,  # This is just for record-keeping
+            "voice_model": voice_model,
             "voice": voice,
+            "service": "openai"  # Assuming "openai" is the service, you can change this as needed
         }
         self.save_speakers()
 
@@ -40,11 +43,16 @@ class TTSVoiceGen:
             raise ValueError(f"Speaker {speaker_name} not found.")
         
         speaker = self.speakers[speaker_name]
+        # Only use valid models like "tts-1" or "tts-1-hd"
+        model = speaker["voice_model"]
+        if model not in self.tts_models:
+            raise ValueError(f"Invalid model for TTS: {model}")
+        
         voice = speaker["voice"]
 
         try:
             response = self.client.audio.speech.create(
-                model="tts-1",  # Always use "tts-1" for generating audio
+                model=model,
                 voice=voice,
                 input=text
             )
@@ -77,7 +85,7 @@ if __name__ == "__main__":
     st.write("## Current Speakers")
     for speaker_name, info in tts_voicegen.speakers.items():
         st.write(f"**{speaker_name}**")
-        st.write(f"Model: {info['selected_model']} | Voice: {info['voice']}")
+        st.write(f"Model: {info['voice_model']} | Voice: {info['voice']}")
         if info['pic']:
             st.image(info['pic'], width=100)
 
@@ -95,13 +103,13 @@ if __name__ == "__main__":
     st.write("## Add New Speaker")
     speaker_name = st.text_input("Speaker Name")
     speaker_pic = st.text_input("Speaker Picture URL (optional)")
-    selected_model = st.text_input("Selected Model (for record-keeping)", value="openai")  # For informational purposes only
+    selected_voice_model = st.selectbox("Select Voice Model", tts_voicegen.tts_models)
     selected_voice = st.selectbox("Select Voice", tts_voicegen.voices)
 
     if st.button("Add Speaker"):
         if speaker_name:
             try:
-                tts_voicegen.add_speaker(speaker_name, speaker_pic, selected_model, selected_voice)
+                tts_voicegen.add_speaker(speaker_name, speaker_pic, selected_voice_model, selected_voice)
                 st.success(f"Added speaker {speaker_name}")
             except ValueError as e:
                 st.error(f"Failed to add speaker: {e}")
