@@ -24,7 +24,10 @@ input_text = st.text_area("Enter the conversation text here:")
 if st.button("Generate Structured Dialogue"):
     if input_text:
         # Prompt to send to the model
-        prompt = f"Structure the following conversation:\n{input_text}"
+        prompt = (
+            "Structure the following conversation, marking unspoken lines as narrator:\n"
+            + input_text
+        )
 
         try:
             # API call with structured output
