@@ -10,11 +10,6 @@ from pages.tts_voicegen import TTSVoiceGen
 openai_api_key = os.getenv("OPENAI_API_KEY")
 client = OpenAI(api_key=openai_api_key)
 
-#models
-gpto = "gpt-4o"
-gptop = "gpt-4o-2024-08-06"
-gptomini = "gpt-4o-mini"
-
 # Initialize TTSVoiceGen
 tts_voicegen = TTSVoiceGen(
     api_key=openai_api_key,
@@ -51,7 +46,7 @@ if st.button("Generate Structured Dialogue"):
         try:
             # API call with structured output
             completion = client.beta.chat.completions.parse(
-                model=gptomini,
+                model="gptomini",
                 messages=[
                     {"role": "system", "content": "Extract and structure the dialogue information."},
                     {"role": "user", "content": prompt},
@@ -68,12 +63,13 @@ if st.button("Generate Structured Dialogue"):
                 st.write(f"**Speaker**: {dialogue.speaker}")
                 st.write(f"**Dialogue**: {dialogue.dialogue}")
                 if generate_voice:
-                    if dialogue.speaker in tts_voicegen.list_speakers():
+                    try:
+                        # Generate voice using TTSVoiceGen, fallback to default if speaker not found
                         file_path = Path(__file__).parent / f"{dialogue.speaker}_audio.mp3"
                         tts_voicegen.generate_audio(dialogue.speaker, dialogue.dialogue, file_path)
                         st.audio(str(file_path), format="audio/mp3")
-                    else:
-                        st.warning(f"Speaker {dialogue.speaker} is not configured in the TTS system.")
+                    except Exception as e:
+                        st.error(f"Failed to generate voice for {dialogue.speaker}: {e}")
 
             # Show the real structured output for TTS or other processes
             st.write("### Structured Output for Processing:")

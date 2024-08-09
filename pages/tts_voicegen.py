@@ -34,10 +34,11 @@ class TTSVoiceGen:
         self.save_speakers()
 
     def generate_audio(self, speaker_name, text, file_path):
-        if speaker_name not in self.speakers:
-            raise ValueError(f"Speaker {speaker_name} not found.")
+        speaker = self.speakers.get(speaker_name, self.speakers.get("default"))
         
-        speaker = self.speakers[speaker_name]
+        if not speaker:
+            raise ValueError(f"No configuration found for speaker '{speaker_name}' and no default speaker configured.")
+
         model = "tts-1"  # Always use "tts-1"
         voice = speaker["voice"]
 
