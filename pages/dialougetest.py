@@ -51,7 +51,7 @@ if st.button("Generate Structured Dialogue"):
         try:
             # API call with structured output
             completion = client.beta.chat.completions.parse(
-                model="gptomini",
+                model=gptomini,
                 messages=[
                     {"role": "system", "content": "Extract and structure the dialogue information."},
                     {"role": "user", "content": prompt},
