@@ -24,14 +24,17 @@ class TTSVoiceGen:
             json.dump(self.speakers, f, indent=2)
 
     def add_speaker(self, name, pic, voice_model="tts-1", voice="nova"):
+        # Only allow valid TTS models to be used when generating audio
         if voice_model not in self.tts_models:
             raise ValueError(f"Invalid voice model: {voice_model}")
         if voice not in self.voices:
             raise ValueError(f"Invalid voice: {voice}")
+        
         self.speakers[name] = {
             "pic": pic,
             "voice_model": voice_model,
-            "voice": voice
+            "voice": voice,
+            "service": "openai"  # Assuming "openai" is the service, you can change this as needed
         }
         self.save_speakers()
 
@@ -40,7 +43,11 @@ class TTSVoiceGen:
             raise ValueError(f"Speaker {speaker_name} not found.")
         
         speaker = self.speakers[speaker_name]
+        # Only use valid models like "tts-1" or "tts-1-hd"
         model = speaker["voice_model"]
+        if model not in self.tts_models:
+            raise ValueError(f"Invalid model for TTS: {model}")
+        
         voice = speaker["voice"]
 
         try:
