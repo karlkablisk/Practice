@@ -43,6 +43,7 @@ class TTSVoiceGen:
         voice = speaker["voice"]
 
         try:
+            # Ensure text is correctly passed to the API
             response = self.client.audio.speech.create(
                 model=model,
                 voice=voice,
