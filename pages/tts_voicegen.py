@@ -24,6 +24,10 @@ class TTSVoiceGen:
             json.dump(self.speakers, f, indent=2)
 
     def add_speaker(self, name, pic, voice_model, voice):
+        if voice_model not in self.tts_models:
+            raise ValueError(f"Invalid voice model: {voice_model}")
+        if voice not in self.voices:
+            raise ValueError(f"Invalid voice: {voice}")
         self.speakers[name] = {
             "pic": pic,
             "voice_model": voice_model,
@@ -36,9 +40,12 @@ class TTSVoiceGen:
             raise ValueError(f"Speaker {speaker_name} not found.")
         
         speaker = self.speakers[speaker_name]
+        model = speaker["voice_model"]
+        voice = speaker["voice"]
+
         response = self.client.audio.speech.create(
-            model=speaker["voice_model"],
-            voice=speaker["voice"],
+            model=model,
+            voice=voice,
             input=text
         )
         response.stream_to_file(file_path)
