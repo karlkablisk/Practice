@@ -1,3 +1,6 @@
+#pip
+pip==24.2
+
 #main
 streamlit
 openai
