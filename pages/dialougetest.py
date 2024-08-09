@@ -10,6 +10,11 @@ from pages.tts_voicegen import TTSVoiceGen
 openai_api_key = os.getenv("OPENAI_API_KEY")
 client = OpenAI(api_key=openai_api_key)
 
+#models
+gpto = "gpt-4o"
+gptop = "gpt-4o-2024-08-06"
+gptomini = "gpt-4o-mini"
+
 # Initialize TTSVoiceGen
 tts_voicegen = TTSVoiceGen(
     api_key=openai_api_key,
