@@ -10,15 +10,10 @@ from pages.tts_voicegen import TTSVoiceGen
 openai_api_key = os.getenv("OPENAI_API_KEY")
 client = OpenAI(api_key=openai_api_key)
 
-#models
-gpto = "gpt-4o"
-gptop = "gpt-4o-2024-08-06"
-gptomini = "gpt-4o-mini"
-
 # Initialize TTSVoiceGen
 tts_voicegen = TTSVoiceGen(
     api_key=openai_api_key,
-    tts_models=["tts-1", "tts-1-hd"],  # These are available models but only "tts-1" is used.
+    tts_models=["tts-1", "tts-1-hd"],
     voices=["alloy", "echo", "fable", "onyx", "nova", "shimmer"]
 )
 
@@ -44,14 +39,13 @@ if st.button("Generate Structured Dialogue"):
     if input_text:
         # Prompt to send to the model
         prompt = (
-            "Structure the following conversation, marking unspoken lines as narrator:\n"
-            + input_text
+            "Structure the following conversation, marking unspoken lines as narrator:\n" + input_text
         )
- 
+        
         try:
             # API call with structured output
             completion = client.beta.chat.completions.parse(
-                model=gptomini,
+                model="gptomini",
                 messages=[
                     {"role": "system", "content": "Extract and structure the dialogue information."},
                     {"role": "user", "content": prompt},
@@ -74,19 +68,15 @@ if st.button("Generate Structured Dialogue"):
                         tts_voicegen.generate_audio(dialogue.speaker, dialogue.dialogue, file_path)
                         st.audio(str(file_path), format="audio/mp3")
                     except Exception as e:
-                        # Fetching speaker information to display in the error message
                         speaker_info = tts_voicegen.get_speaker_info(dialogue.speaker)
-                        if not speaker_info:
-                            speaker_info = tts_voicegen.get_speaker_info("default")  # Fallback to default
                         error_details = (
                             f"Failed to generate voice for {dialogue.speaker}: {e}\n"
-                            f"Attempted model: tts-1 (hardcoded in TTSVoiceGen)\n"
-                            f"Attempted voice: {speaker_info.get('voice', 'Unknown')}\n"
+                            f"Attempted model: tts-1\n"
+                            f"Attempted voice: {speaker_info.get('voice', 'Unknown') if speaker_info else 'Default voice'}\n"
                             f"Text attempted: \"{dialogue.dialogue}\"\n"
                             f"File path attempted: {file_path}"
                         )
                         st.error(error_details)
-
 
             # Show the real structured output for TTS or other processes
             st.write("### Structured Output for Processing:")
