@@ -10,10 +10,13 @@ client = OpenAI(api_key=openai_api_key)
 # List of OpenAI voices
 voices = ["alloy", "echo", "fable", "onyx", "nova", "shimmer"]
 
+# List of available TTS models
+tts_models = ["tts-1", "tts-1-hd"]
+
 # Function to generate audio from text
-def generate_audio(text, voice, file_path):
+def generate_audio(text, voice, model, file_path):
     response = client.audio.speech.create(
-        model="tts-1",
+        model=model,
         voice=voice,
         input=text
     )
@@ -21,7 +24,10 @@ def generate_audio(text, voice, file_path):
     return file_path
 
 # Streamlit UI
-st.title("OpenAI Text-to-Speech (TTS) with Voice Selection")
+st.title("OpenAI Text-to-Speech (TTS) with Voice and Model Selection")
+
+# Select a TTS model
+selected_model = st.selectbox("Select a TTS model:", tts_models)
 
 # Select a voice
 selected_voice = st.selectbox("Select a voice:", voices)
@@ -38,14 +44,8 @@ if st.button("Generate and Play Audio"):
         st.error("Please enter some text.")
     else:
         try:
-            audio_path = generate_audio(input_text, selected_voice, output_file_path)
+            audio_path = generate_audio(input_text, selected_voice, selected_model, output_file_path)
             st.audio(str(audio_path), format="audio/mp3")
             st.success("Audio generated successfully.")
         except Exception as e:
             st.error(f"Error generating audio: {e}")
-
-# Note for users about AI-generated voices
-st.write(
-    "Note: The TTS voice you are hearing is AI-generated and not a human voice, "
-    "in accordance with OpenAI's usage policies."
-)
