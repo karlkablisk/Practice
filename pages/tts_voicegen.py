@@ -5,10 +5,10 @@ from pathlib import Path
 from openai import OpenAI
 
 class TTSVoiceGen:
-    def __init__(self, api_key, tts_models, voices, json_file="speakers.json"):
+    def __init__(self, api_key, tts_models=None, voices=None, json_file="speakers.json"):
         self.client = OpenAI(api_key=api_key)
-        self.tts_models = tts_models
-        self.voices = voices
+        self.tts_models = tts_models or ["tts-1"]  # Default to "tts-1" if not provided
+        self.voices = voices or ["alloy", "echo", "fable", "onyx", "nova", "shimmer"]
         self.json_file = Path(json_file)
         self.speakers = self.load_speakers()
 
@@ -23,7 +23,7 @@ class TTSVoiceGen:
         with open(self.json_file, 'w') as f:
             json.dump(self.speakers, f, indent=2)
 
-    def add_speaker(self, name, pic, voice_model, voice):
+    def add_speaker(self, name, pic, voice_model="tts-1", voice="nova"):
         if voice_model not in self.tts_models:
             raise ValueError(f"Invalid voice model: {voice_model}")
         if voice not in self.voices:
@@ -43,13 +43,16 @@ class TTSVoiceGen:
         model = speaker["voice_model"]
         voice = speaker["voice"]
 
-        response = self.client.audio.speech.create(
-            model=model,
-            voice=voice,
-            input=text
-        )
-        response.stream_to_file(file_path)
-        return file_path
+        try:
+            response = self.client.audio.speech.create(
+                model=model,
+                voice=voice,
+                input=text
+            )
+            response.stream_to_file(file_path)
+            return file_path
+        except Exception as e:
+            raise RuntimeError(f"Failed to generate audio for {speaker_name}: {e}")
 
     def list_speakers(self):
         return list(self.speakers.keys())
@@ -78,7 +81,18 @@ if __name__ == "__main__":
         st.write(f"Model: {info['voice_model']} | Voice: {info['voice']}")
         if info['pic']:
             st.image(info['pic'], width=100)
-    
+
+        # Test audio output
+        if st.button(f"Test Voice for {speaker_name}"):
+            test_text = f"Hi, I'm {speaker_name}"
+            file_path = Path(__file__).parent / f"{speaker_name}_test_audio.mp3"
+            try:
+                tts_voicegen.generate_audio(speaker_name, test_text, file_path)
+                st.audio(str(file_path), format="audio/mp3")
+                st.success(f"Test audio generated successfully for {speaker_name}.")
+            except Exception as e:
+                st.error(f"Failed to generate test audio for {speaker_name}: {e}")
+
     st.write("## Add New Speaker")
     speaker_name = st.text_input("Speaker Name")
     speaker_pic = st.text_input("Speaker Picture URL (optional)")
@@ -87,7 +101,10 @@ if __name__ == "__main__":
 
     if st.button("Add Speaker"):
         if speaker_name:
-            tts_voicegen.add_speaker(speaker_name, speaker_pic, selected_voice_model, selected_voice)
-            st.success(f"Added speaker {speaker_name}")
+            try:
+                tts_voicegen.add_speaker(speaker_name, speaker_pic, selected_voice_model, selected_voice)
+                st.success(f"Added speaker {speaker_name}")
+            except ValueError as e:
+                st.error(f"Failed to add speaker: {e}")
         else:
             st.error("Please enter a speaker name.")
