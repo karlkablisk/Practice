@@ -7,10 +7,12 @@ from openai import OpenAI
 class TTSVoiceGen:
     def __init__(self, api_key, tts_models=None, voices=None, json_file="speakers.json"):
         self.client = OpenAI(api_key=api_key)
-        self.tts_models = tts_models or ["tts-1"]  # Default to "tts-1" if not provided
+        self.tts_models = tts_models or ["tts-1"]
         self.voices = voices or ["alloy", "echo", "fable", "onyx", "nova", "shimmer"]
         self.json_file = Path(json_file)
         self.speakers = self.load_speakers()
+
+
 
     def load_speakers(self):
         if self.json_file.exists():
@@ -39,8 +41,14 @@ class TTSVoiceGen:
         if not speaker:
             raise ValueError(f"No configuration found for speaker '{speaker_name}' and no default speaker configured.")
 
-        model = "tts-1"  # Always use "tts-1"
+        model = "tts-1"
         voice = speaker["voice"]
+
+        verbose_output = (
+            f"Attempting to generate audio with the following parameters:\n"
+            f"Model: {model}\nVoice: {voice}\nText: {text}\nFile Path: {file_path}\n"
+        )
+        st.write(verbose_output)  # Show the parameters in Streamlit before trying to generate audio
 
         try:
             response = self.client.audio.speech.create(
@@ -49,9 +57,11 @@ class TTSVoiceGen:
                 input=text
             )
             response.stream_to_file(file_path)
+            st.success("Audio generated successfully.")
             return file_path
         except Exception as e:
-            raise RuntimeError(f"Failed to generate audio for {speaker_name}: {e}")
+            raise RuntimeError(f"Failed to generate audio for {speaker_name}: {e}\n{verbose_output}")
+
 
     def list_speakers(self):
         return list(self.speakers.keys())
