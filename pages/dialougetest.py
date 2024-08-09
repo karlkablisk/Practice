@@ -15,6 +15,46 @@ gpto = "gpt-4o"
 gptop = "gpt-4o-2024-08-06"
 gptomini = "gpt-4o-mini"
 
+
+#test
+# Hardcoded parameters
+model = "tts-1"
+voice = "nova"
+text_to_speak = "Test"
+file_path = Path(__file__).parent / "test_audio.mp3"
+
+# Streamlit UI
+st.title("Hardcoded TTS Voice Generation")
+
+# Button to generate and play audio
+if st.button("Generate and Play Test Audio"):
+    try:
+        # Verbose output to confirm parameters being used
+        st.write(
+            f"Generating audio with the following details:\n"
+            f"Model: {model}\n"
+            f"Voice: {voice}\n"
+            f"Text: {text_to_speak}\n"
+            f"File Path: {file_path}\n"
+        )
+        
+        # Generate audio
+        response = client.audio.speech.create(
+            model=model,
+            voice=voice,
+            input=text_to_speak
+        )
+        response.stream_to_file(file_path)
+        
+        # Play the generated audio
+        st.audio(str(file_path), format="audio/mp3")
+        st.success("Audio generated and played successfully.")
+
+    except Exception as e:
+        st.error(f"Failed to generate audio: {e}")
+
+
+
 # Initialize TTSVoiceGen
 tts_voicegen = TTSVoiceGen(
     api_key=openai_api_key,
