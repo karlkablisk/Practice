@@ -15,45 +15,41 @@ gpto = "gpt-4o"
 gptop = "gpt-4o-2024-08-06"
 gptomini = "gpt-4o-mini"
 
-
-#test
-# Hardcoded parameters
-model = "tts-1"
-voice = "nova"
-text_to_speak = "Test"
-file_path = Path(__file__).parent / "test_audio.mp3"
+# Hardcoded parameters for test
+test_model = "tts-1"
+test_voice = "nova"
+test_text_to_speak = "Test"
+test_file_path = Path(__file__).parent / "test_audio.mp3"
 
 # Streamlit UI
-st.title("Hardcoded TTS Voice Generation")
+st.title("Hardcoded TTS Voice Generation and Structured Dialogue with TTS")
 
-# Button to generate and play audio
+# Button to generate and play audio for the hardcoded test
 if st.button("Generate and Play Test Audio"):
     try:
         # Verbose output to confirm parameters being used
         st.write(
             f"Generating audio with the following details:\n"
-            f"Model: {model}\n"
-            f"Voice: {voice}\n"
-            f"Text: {text_to_speak}\n"
-            f"File Path: {file_path}\n"
+            f"Model: {test_model}\n"
+            f"Voice: {test_voice}\n"
+            f"Text: {test_text_to_speak}\n"
+            f"File Path: {test_file_path}\n"
         )
         
         # Generate audio
         response = client.audio.speech.create(
-            model=model,
-            voice=voice,
-            input=text_to_speak
+            model=test_model,
+            voice=test_voice,
+            input=test_text_to_speak
         )
-        response.stream_to_file(file_path)
+        response.stream_to_file(test_file_path)
         
         # Play the generated audio
-        st.audio(str(file_path), format="audio/mp3")
+        st.audio(str(test_file_path), format="audio/mp3")
         st.success("Audio generated and played successfully.")
 
     except Exception as e:
         st.error(f"Failed to generate audio: {e}")
-
-
 
 # Initialize TTSVoiceGen
 tts_voicegen = TTSVoiceGen(
@@ -70,8 +66,8 @@ class DialogueLine(BaseModel):
 class StructuredDialogue(BaseModel):
     dialogues: list[DialogueLine]
 
-# Streamlit app interface
-st.title("Dialogue Structuring with TTS using GPT-4o")
+# Streamlit app interface for structured dialogue
+st.write("## Dialogue Structuring with TTS using GPT-4o")
 
 # Input text
 input_text = st.text_area("Enter the conversation text here:")
