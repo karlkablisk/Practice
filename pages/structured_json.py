@@ -7,10 +7,13 @@ from openai import OpenAI
 openai_api_key = os.getenv("OPENAI_API_KEY")
 client = OpenAI(api_key=openai_api_key)
 
-# Define the schema using Pydantic
-class Dialogue(BaseModel):
+# Define the schema using Pydantic for multiple dialogues
+class DialogueLine(BaseModel):
     speaker: str
     dialogue: str
+
+class StructuredDialogue(BaseModel):
+    dialogues: list[DialogueLine]
 
 # Streamlit app interface
 st.title("Dialogue Structuring with GPT-4o")
@@ -31,15 +34,21 @@ if st.button("Generate Structured Dialogue"):
                     {"role": "system", "content": "Extract and structure the dialogue information."},
                     {"role": "user", "content": prompt},
                 ],
-                response_format=Dialogue,
+                response_format=StructuredDialogue,
             )
             
             # Access the parsed response
             structured_dialogue = completion.choices[0].message.parsed
 
-            # Display the result
-            st.write(f"**Speaker**: {structured_dialogue.speaker}")
-            st.write(f"**Dialogue**: {structured_dialogue.dialogue}")
+            # Streamlit display for each dialogue
+            st.write("### Parsed Dialogue:")
+            for dialogue in structured_dialogue.dialogues:
+                st.write(f"**Speaker**: {dialogue.speaker}")
+                st.write(f"**Dialogue**: {dialogue.dialogue}")
+
+            # Show the real structured output for TTS or other processes
+            st.write("### Structured Output for Processing:")
+            st.code(structured_dialogue.json(indent=2), language='json')
 
         except Exception as e:
             st.error(f"Error occurred: {str(e)}")
