@@ -10,7 +10,7 @@ from pages.tts_voicegen import TTSVoiceGen
 openai_api_key = os.getenv("OPENAI_API_KEY")
 client = OpenAI(api_key=openai_api_key)
 
-#models
+# Models for text generation
 gpto = "gpt-4o"
 gptop = "gpt-4o-2024-08-06"
 gptomini = "gpt-4o-mini"
@@ -69,16 +69,35 @@ if st.button("Generate Structured Dialogue"):
                 if generate_voice:
                     file_path = Path(__file__).parent / f"{dialogue.speaker}_audio.mp3"
                     try:
+                        # Fetch the speaker info
+                        speaker_info = tts_voicegen.get_speaker_info(dialogue.speaker) or tts_voicegen.get_speaker_info("default")
+                        
+                        # Determine model and voice
+                        model_to_use = speaker_info.get("voice_model", "tts-1")
+                        if model_to_use == "openai":
+                            model_to_use = "tts-1"
+                        voice_to_use = speaker_info.get("voice", "Unknown")
+                        
+                        # Verbose output before generation
+                        st.write(
+                            f"Generating audio with the following details:\n"
+                            f"Model: {model_to_use}\n"
+                            f"Voice: {voice_to_use}\n"
+                            f"Text: {dialogue.dialogue}\n"
+                            f"File Path: {file_path}\n"
+                        )
+
+                        # Generate voice using TTSVoiceGen
                         tts_voicegen.generate_audio(dialogue.speaker, dialogue.dialogue, file_path)
                         st.audio(str(file_path), format="audio/mp3")
+
                     except Exception as e:
-                        speaker_info = tts_voicegen.get_speaker_info(dialogue.speaker) or {"voice": "Default voice"}
                         st.error(
                             f"Failed to generate voice for {dialogue.speaker}: {e}\n"
-                            f"Attempted model: tts-1\n"
-                            f"Attempted voice: {speaker_info['voice']}\n"
-                            f"Text attempted: \"{dialogue.dialogue}\"\n"
-                            f"File path attempted: {file_path}"
+                            f"Model: {model_to_use}\n"
+                            f"Voice: {voice_to_use}\n"
+                            f"Text: {dialogue.dialogue}\n"
+                            f"File Path: {file_path}\n"
                         )
 
             # Show the real structured output for TTS or other processes
