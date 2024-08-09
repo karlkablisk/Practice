@@ -5,12 +5,12 @@ from pathlib import Path
 from openai import OpenAI
 
 class TTSVoiceGen:
-    def __init__(self, api_key, voices=None, json_file="speakers.json"):
+    def __init__(self, api_key, tts_models=None, voices=None, json_file="speakers.json"):
         self.client = OpenAI(api_key=api_key)
+        self.tts_models = tts_models or ["tts-1"]  # Default to "tts-1" if not provided
         self.voices = voices or ["alloy", "echo", "fable", "onyx", "nova", "shimmer"]
         self.json_file = Path(json_file)
         self.speakers = self.load_speakers()
-        self.model = "tts-1"  # Hardcoded model, always tts-1
 
     def load_speakers(self):
         if self.json_file.exists():
@@ -24,15 +24,14 @@ class TTSVoiceGen:
             json.dump(self.speakers, f, indent=2)
 
     def add_speaker(self, name, pic, selected_model="openai", voice="nova"):
-        if selected_model != "openai":
-            raise ValueError(f"Unsupported TTS service: {selected_model}")
+        # `selected_model` is stored in the JSON but not used for TTS generation.
         if voice not in self.voices:
             raise ValueError(f"Invalid voice: {voice}")
         
         self.speakers[name] = {
             "pic": pic,
-            "selected_model": selected_model,  # Store selected_model, even though it’s always "openai" for now
-            "voice": voice
+            "selected_model": selected_model,  # This is just for record-keeping
+            "voice": voice,
         }
         self.save_speakers()
 
@@ -41,14 +40,11 @@ class TTSVoiceGen:
             raise ValueError(f"Speaker {speaker_name} not found.")
         
         speaker = self.speakers[speaker_name]
-        if speaker["selected_model"] != "openai":
-            raise ValueError(f"Unsupported TTS service: {speaker['selected_model']}")
-
         voice = speaker["voice"]
 
         try:
             response = self.client.audio.speech.create(
-                model=self.model,  # Always use tts-1
+                model="tts-1",  # Always use "tts-1" for generating audio
                 voice=voice,
                 input=text
             )
@@ -71,6 +67,7 @@ if __name__ == "__main__":
     # Initialize TTSVoiceGen
     tts_voicegen = TTSVoiceGen(
         api_key=openai_api_key,
+        tts_models=["tts-1", "tts-1-hd"],
         voices=["alloy", "echo", "fable", "onyx", "nova", "shimmer"]
     )
     
@@ -80,7 +77,7 @@ if __name__ == "__main__":
     st.write("## Current Speakers")
     for speaker_name, info in tts_voicegen.speakers.items():
         st.write(f"**{speaker_name}**")
-        st.write(f"Selected Model: {info['selected_model']} | Voice: {info['voice']}")
+        st.write(f"Model: {info['selected_model']} | Voice: {info['voice']}")
         if info['pic']:
             st.image(info['pic'], width=100)
 
@@ -98,7 +95,7 @@ if __name__ == "__main__":
     st.write("## Add New Speaker")
     speaker_name = st.text_input("Speaker Name")
     speaker_pic = st.text_input("Speaker Picture URL (optional)")
-    selected_model = st.selectbox("Select TTS Service", ["openai"])  # Only "openai" for now
+    selected_model = st.text_input("Selected Model (for record-keeping)", value="openai")  # For informational purposes only
     selected_voice = st.selectbox("Select Voice", tts_voicegen.voices)
 
     if st.button("Add Speaker"):
