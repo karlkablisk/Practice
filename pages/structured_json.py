@@ -17,10 +17,15 @@ class StructuredDialogue(BaseModel):
     dialogues: list[DialogueLine]
 
 # Streamlit app interface
-st.title("Dialogue Structuring with GPT-4o-mini")
+st.title("Dialogue Structuring with GPT-4o")
 
 # Input text
 input_text = st.text_area("Enter the conversation text here:")
+
+#models
+gpto = "gpt-4o"
+gptop = "gpt-4o-2024-08-06"
+gptomini = "gpt-4o-mini"
 
 if st.button("Generate Structured Dialogue"):
     if input_text:
@@ -33,7 +38,7 @@ if st.button("Generate Structured Dialogue"):
         try:
             # API call with structured output
             completion = client.beta.chat.completions.parse(
-                model="gpt-4o-2024-08-06",
+                model=gptomini,
                 messages=[
                     {"role": "system", "content": "Extract and structure the dialogue information."},
                     {"role": "user", "content": prompt},
