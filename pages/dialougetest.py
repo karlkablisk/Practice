@@ -6,7 +6,6 @@ import json
 from pathlib import Path
 from pages.tts_voicegen import TTSVoiceGen
 
-
 # Load OpenAI API key from the environment variable
 openai_api_key = os.getenv("OPENAI_API_KEY")
 client = OpenAI(api_key=openai_api_key)
@@ -22,6 +21,7 @@ tts_voicegen = TTSVoiceGen(
 class DialogueLine(BaseModel):
     speaker: str
     dialogue: str
+    generate_voice: bool = False  # Add a flag to indicate if voice generation is needed
 
 class StructuredDialogue(BaseModel):
     dialogues: list[DialogueLine]
@@ -37,34 +37,46 @@ gpto = "gpt-4o"
 gptop = "gpt-4o-2024-08-06"
 gptomini = "gpt-4o-mini"
 
+# If input text is provided, display checkboxes for each dialogue line
+if input_text:
+    # Prompt to send to the model
+    prompt = (
+        "Structure the following conversation, marking unspoken lines as narrator:\n"
+        + input_text
+    )
+
+    try:
+        # API call with structured output
+        completion = client.beta.chat.completions.parse(
+            model=gptomini,
+            messages=[
+                {"role": "system", "content": "Extract and structure the dialogue information."},
+                {"role": "user", "content": prompt},
+            ],
+            response_format=StructuredDialogue,
+        )
+        
+        # Access the parsed response
+        structured_dialogue = completion.choices[0].message.parsed
+
+        # Display checkboxes for each dialogue line
+        for dialogue in structured_dialogue.dialogues:
+            dialogue.generate_voice = st.checkbox(f"Generate Voice for {dialogue.speaker}", key=dialogue.speaker)
+
+    except Exception as e:
+        st.error(f"Error occurred: {str(e)}")
+
+# Button to generate structured dialogue and voices
 if st.button("Generate Structured Dialogue"):
     if input_text:
-        # Prompt to send to the model
-        prompt = (
-            "Structure the following conversation, marking unspoken lines as narrator:\n"
-            + input_text
-        )
-
         try:
-            # API call with structured output
-            completion = client.beta.chat.completions.parse(
-                model=gptomini,
-                messages=[
-                    {"role": "system", "content": "Extract and structure the dialogue information."},
-                    {"role": "user", "content": prompt},
-                ],
-                response_format=StructuredDialogue,
-            )
-            
-            # Access the parsed response
-            structured_dialogue = completion.choices[0].message.parsed
-
             # Streamlit display for each dialogue
             st.write("### Parsed Dialogue:")
             for dialogue in structured_dialogue.dialogues:
                 st.write(f"**Speaker**: {dialogue.speaker}")
                 st.write(f"**Dialogue**: {dialogue.dialogue}")
-                if st.checkbox(f"Generate Voice for {dialogue.speaker}", key=dialogue.speaker):
+                
+                if dialogue.generate_voice:
                     if dialogue.speaker in tts_voicegen.list_speakers():
                         file_path = Path(__file__).parent / f"{dialogue.speaker}_audio.mp3"
                         tts_voicegen.generate_audio(dialogue.speaker, dialogue.dialogue, file_path)
