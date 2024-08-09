@@ -68,13 +68,25 @@ if st.button("Generate Structured Dialogue"):
                 st.write(f"**Speaker**: {dialogue.speaker}")
                 st.write(f"**Dialogue**: {dialogue.dialogue}")
                 if generate_voice:
+                    file_path = Path(__file__).parent / f"{dialogue.speaker}_audio.mp3"
                     try:
                         # Generate voice using TTSVoiceGen, fallback to default if speaker not found
-                        file_path = Path(__file__).parent / f"{dialogue.speaker}_audio.mp3"
                         tts_voicegen.generate_audio(dialogue.speaker, dialogue.dialogue, file_path)
                         st.audio(str(file_path), format="audio/mp3")
                     except Exception as e:
-                        st.error(f"Failed to generate voice for {dialogue.speaker}: {e}")
+                        # Fetching speaker information to display in the error message
+                        speaker_info = tts_voicegen.get_speaker_info(dialogue.speaker)
+                        if not speaker_info:
+                            speaker_info = tts_voicegen.get_speaker_info("default")  # Fallback to default
+                        error_details = (
+                            f"Failed to generate voice for {dialogue.speaker}: {e}\n"
+                            f"Attempted model: tts-1 (hardcoded in TTSVoiceGen)\n"
+                            f"Attempted voice: {speaker_info.get('voice', 'Unknown')}\n"
+                            f"Text attempted: \"{dialogue.dialogue}\"\n"
+                            f"File path attempted: {file_path}"
+                        )
+                        st.error(error_details)
+
 
             # Show the real structured output for TTS or other processes
             st.write("### Structured Output for Processing:")
