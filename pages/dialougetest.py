@@ -9,6 +9,7 @@ from pages.tts_voicegen import TTSVoiceGen
 
 # Load OpenAI API key from the environment variable
 openai_api_key = os.getenv("OPENAI_API_KEY")
+client = OpenAI(api_key=openai_api_key)
 
 # Initialize TTSVoiceGen
 tts_voicegen = TTSVoiceGen(
