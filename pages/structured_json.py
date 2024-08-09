@@ -17,7 +17,7 @@ class StructuredDialogue(BaseModel):
     dialogues: list[DialogueLine]
 
 # Streamlit app interface
-st.title("Dialogue Structuring with GPT-4o")
+st.title("Dialogue Structuring with GPT-4o-mini")
 
 # Input text
 input_text = st.text_area("Enter the conversation text here:")
