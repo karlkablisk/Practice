@@ -2,6 +2,7 @@ import os
 import streamlit as st
 from pydantic import BaseModel
 from openai import OpenAI
+import json
 
 # Load OpenAI API key from the environment variable
 openai_api_key = os.getenv("OPENAI_API_KEY")
@@ -51,7 +52,7 @@ if st.button("Generate Structured Dialogue"):
 
             # Show the real structured output for TTS or other processes
             st.write("### Structured Output for Processing:")
-            st.code(structured_dialogue.json(indent=2), language='json')
+            st.code(json.dumps(structured_dialogue.dict(), indent=2), language='json')
 
         except Exception as e:
             st.error(f"Error occurred: {str(e)}")
