@@ -10,15 +10,10 @@ from pages.tts_voicegen import TTSVoiceGen
 openai_api_key = os.getenv("OPENAI_API_KEY")
 client = OpenAI(api_key=openai_api_key)
 
-#models
-gpto = "gpt-4o"
-gptop = "gpt-4o-2024-08-06"
-gptomini = "gpt-4o-mini"
-
 # Initialize TTSVoiceGen
 tts_voicegen = TTSVoiceGen(
     api_key=openai_api_key,
-    tts_models=["tts-1", "tts-1-hd"],
+    tts_models=["tts-1", "tts-1-hd"],  # These are available models but only "tts-1" is used.
     voices=["alloy", "echo", "fable", "onyx", "nova", "shimmer"]
 )
 
@@ -51,7 +46,7 @@ if st.button("Generate Structured Dialogue"):
         try:
             # API call with structured output
             completion = client.beta.chat.completions.parse(
-                model=gptomini,
+                model="gptomini",
                 messages=[
                     {"role": "system", "content": "Extract and structure the dialogue information."},
                     {"role": "user", "content": prompt},
