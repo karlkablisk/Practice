@@ -12,6 +12,7 @@ gptomini = "gpt-4o-mini"
 
 class OpenAIStreamlitApp:
     def __init__(self):
+        # Initialize the OpenAI client with the API key from the environment variable
         self.client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
     def draw_rectangle(self, image_path, coords):
@@ -30,27 +31,28 @@ class OpenAIStreamlitApp:
             messages=[{"role": "user", "content": prompt}],
             max_tokens=150
         )
-        return response.choices[0].message['content']  # Corrected message access
+        return response.choices[0].message.content  # Correct message access
 
     def run(self):
         st.title('Image Text Box Drawer and Text Generator')
+
+        # Manual coordinate inputs
+        col1, col2, col3, col4 = st.columns(4)
+        with col1:
+            x1 = st.number_input('Enter X1 Coordinate', min_value=0, value=462)
+        with col2:
+            y1 = st.number_input('Enter Y1 Coordinate', min_value=0, value=80)
+        with col3:
+            x2 = st.number_input('Enter X2 Coordinate', min_value=0, value=926)
+        with col4:
+            y2 = st.number_input('Enter Y2 Coordinate', min_value=0, value=146)
+        coords = (x1, y1, x2, y2)
 
         uploaded_file = st.file_uploader("Choose an image file", type=["png", "jpg", "jpeg"])
         if uploaded_file is not None:
             image_path = f"./temp_{uploaded_file.name}"
             with open(image_path, 'wb') as f:
                 f.write(uploaded_file.getvalue())
-
-            col1, col2, col3, col4 = st.columns(4)
-            with col1:
-                x1 = st.number_input('Enter X1 Coordinate', min_value=0, value=462)
-            with col2:
-                y1 = st.number_input('Enter Y1 Coordinate', min_value=0, value=80)
-            with col3:
-                x2 = st.number_input('Enter X2 Coordinate', min_value=0, value=926)
-            with col4:
-                y2 = st.number_input('Enter Y2 Coordinate', min_value=0, value=146)
-            coords = (x1, y1, x2, y2)
 
             if st.button('Draw Rectangle'):
                 modified_image_path, used_coords = self.draw_rectangle(image_path, coords)
