@@ -1,8 +1,7 @@
 import os
 import streamlit as st
 from PIL import Image, ImageDraw
-import os
-import openai
+from openai import OpenAI
 
 # Load OpenAI API key from the environment variable
 openai_api_key = os.getenv("OPENAI_API_KEY")
