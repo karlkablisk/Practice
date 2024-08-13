@@ -14,11 +14,6 @@ gptop = "gpt-4o-2024-08-06"
 gptomini = "gpt-4o-mini"
 
 class OpenAIStreamlitApp:
-    def __init__(self):
-        load_dotenv()
-        openai_api_key = os.getenv("OPENAI_API_KEY")
-        self.client = OpenAI(api_key=openai_api_key)
-
     def generate_text(self, prompt, model):
         response = self.client.chat.completions.create(
             model=model,
