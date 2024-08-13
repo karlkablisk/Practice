@@ -9,6 +9,10 @@ openai
 
 #streamlit addons
 streamlit-drawable-canvas
+pillow 
+pandas 
+numpy 
+svgpathtools
 
 #new lanchain
 langchain
