@@ -25,7 +25,7 @@ class OpenAIStreamlitApp:
         """Draws a rectangle on the image based on the given coordinates."""
         with Image.open(image_path) as img:
             draw = ImageDraw.Draw(img)
-            draw.rectangle(coords, outline="green", width=5)
+            draw.rectangle(coords, outline="green", width=1)  # Stroke width is fixed at 1
             output_path = image_path.replace('.png', '_modified.png')
             img.save(output_path)
         return output_path, coords
@@ -91,15 +91,15 @@ class OpenAIStreamlitApp:
             st.subheader("Draw to Highlight")
             drawing_mode = st.selectbox(
                 "Drawing tool:",
-                ("rect", "freedraw", "line", "circle", "transform", "polygon", "point"),
+                ("rect", "circle", "polygon", "transform"),
             )
-            stroke_width = st.slider("Stroke width: ", 1, 25, 3)
             stroke_color = st.color_picker("Stroke color hex: ")
             bg_image = Image.open(image_path)
             
+            # Adjust canvas to match the image size
             canvas_result = st_canvas(
                 fill_color="rgba(255, 165, 0, 0.3)",  # Fixed fill color with some opacity
-                stroke_width=stroke_width,
+                stroke_width=1,  # Stroke width is fixed
                 stroke_color=stroke_color,
                 background_image=bg_image,
                 update_streamlit=True,
