@@ -13,38 +13,38 @@ gpto = "gpt-4o"
 gptop = "gpt-4o-2024-08-06"
 gptomini = "gpt-4o-mini"
 
-class OpenAIStreamlitApp:
-    def generate_text(self, prompt, model):
-        response = self.client.chat.completions.create(
-            model=model,
-            messages=[{"role": "user", "content": prompt}],
-            max_tokens=150
-        )
-        return response.choices[0].message.content
 
-    def run(self):
-        st.title("OpenAI Text Generation")
+def generate_text(self, prompt, model):
+    response = self.client.chat.completions.create(
+        model=model,
+        messages=[{"role": "user", "content": prompt}],
+        max_tokens=150
+    )
+    return response.choices[0].message.content
 
-        # Dropdown for model selection with gpt4op as the default
-        model_choice = st.selectbox(
-            "Choose GPT Model:", 
-            [gpt35, gpt4t, gpto, gptop, gptomini],
-            index=[gpt35, gpt4t, gpto, gptop, gptomini].index(gptop)  # Setting gpt4op as the default
-        )
+def run(self):
+    st.title("OpenAI Text Generation")
 
-        prompt_text = st.text_area("Enter your prompt:", value="Hello, what's on your mind today?")
+    # Dropdown for model selection with gpt4op as the default
+    model_choice = st.selectbox(
+        "Choose GPT Model:", 
+        [gpt35, gpt4t, gpto, gptop, gptomini],
+        index=[gpt35, gpt4t, gpto, gptop, gptomini].index(gptop)  # Setting gpt4op as the default
+    )
 
-        if st.button("Generate Text"):
-            if not prompt_text.strip():
-                st.error("Please enter some prompt text.")
-            else:
-                try:
-                    generated_text = self.generate_text(prompt_text, model_choice)
-                    st.text_area("Generated Text:", value=generated_text, height=300)
-                    st.success("Text generated successfully.")
-                except Exception as e:
-                    st.error(f"Error generating text: {e}")
+    prompt_text = st.text_area("Enter your prompt:", value="Hello, what's on your mind today?")
+
+    if st.button("Generate Text"):
+        if not prompt_text.strip():
+            st.error("Please enter some prompt text.")
+        else:
+            try:
+                generated_text = self.generate_text(prompt_text, model_choice)
+                st.text_area("Generated Text:", value=generated_text, height=300)
+                st.success("Text generated successfully.")
+            except Exception as e:
+                st.error(f"Error generating text: {e}")
 
 if __name__ == "__main__":
-    app = OpenAIStreamlitApp()
-    app.run()
+app = OpenAIStreamlitApp()
+app.run()
