@@ -47,6 +47,36 @@ class OpenAIStreamlitApp:
             "orange": 45
         }
 
+    def generate_text(self, prompt, model):
+        """Uses the specified GPT model to generate a response based on the input prompt."""
+        response = self.client.chat.completions.create(
+            model=model,
+            messages=[{"role": "user", "content": prompt}],
+            max_tokens=150
+        )
+
+        message_content = response.choices[0].message.content
+
+        # Check if the AI's response indicates it needs to use the fruit tool
+        if "apple" in prompt.lower() or "pear" in prompt.lower() or "banana" in prompt.lower() or "orange" in prompt.lower():
+            fruit = self.extract_fruit(prompt)
+            if fruit:
+                st.warning("Fruit tool used")
+                quantity = self.get_fruit_quantity(fruit)
+                return f"There are {quantity} {fruit}s."
+            else:
+                return message_content
+        else:
+            return message_content
+
+    def extract_fruit(self, prompt):
+        """Simple extraction of a fruit name from the prompt."""
+        fruits = ["apple", "pear", "banana", "orange"]
+        for fruit in fruits:
+            if fruit in prompt.lower():
+                return fruit
+        return None
+
     def get_fruit_quantity(self, fruit):
         """Uses the assistant's tool to get the quantity of a specific fruit."""
         return self.fruit_quantities.get(fruit.lower(), "Unknown")
@@ -67,42 +97,9 @@ class OpenAIStreamlitApp:
                 st.error("Please enter some prompt text.")
             else:
                 try:
-                    # Generate text with the option to call the function
-                    response = self.client.chat.completions.create(
-                        model=model_choice,
-                        messages=[{"role": "user", "content": prompt_text}],
-                        functions=[{
-                            "name": "get_fruit_quantity",
-                            "description": "Get the quantity of a specific fruit",
-                            "parameters": {
-                                "type": "object",
-                                "properties": {
-                                    "fruit": {
-                                        "type": "string",
-                                        "description": "The name of the fruit, e.g., apple, pear"
-                                    }
-                                },
-                                "required": ["fruit"]
-                            }
-                        }],
-                        function_call="auto"  # AI decides when to call the function
-                    )
-
-                    # Handle the response
-                    choice = response.choices[0]
-                    if choice.get("finish_reason") == "function_call":
-                        function_name = choice.message.get("function_call", {}).get("name")
-                        if function_name == "get_fruit_quantity":
-                            st.warning("Fruit tool used")
-                            fruit_name = choice.message.get("function_call", {}).get("arguments", {}).get("fruit")
-                            quantity = self.get_fruit_quantity(fruit_name)
-                            result_text = f"There are {quantity} {fruit_name}s."
-                    else:
-                        result_text = choice.message["content"]
-
-                    st.text_area("Generated Text:", value=result_text, height=300)
+                    generated_text = self.generate_text(prompt_text, model_choice)
+                    st.text_area("Generated Text:", value=generated_text, height=300)
                     st.success("Text generated successfully.")
-
                 except Exception as e:
                     st.error(f"Error generating text: {e}")
 
