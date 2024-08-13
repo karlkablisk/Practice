@@ -11,6 +11,9 @@ gpto = "gpt-4o"
 gptop = "gpt-4o-2024-08-06"
 gptomini = "gpt-4o-mini"
 
+# Set the default model here
+default_model = gptop
+
 class OpenAIStreamlitApp:
     def __init__(self):
         # Initialize the OpenAI client with the API key from the environment variable
@@ -39,7 +42,7 @@ class OpenAIStreamlitApp:
                 {"role": "user", "content": [
                     {"type": "text", "text": prompt},
                     {"type": "image_url", "image_url": {
-                        "url": f"data:image/png;base64,{base64_image}"}
+                        "url": f"data:image/png;base64,{base64_image}"}  # This passes the image to the AI
                     }
                 ]}
             ]
@@ -82,14 +85,14 @@ class OpenAIStreamlitApp:
                 st.image(modified_image_path, caption='Modified Image with Rectangle')
                 st.success(f"Rectangle drawn with coordinates: {used_coords}")
 
-        # Dropdown for model selection with gpt-4o as the default
+        # Dropdown for model selection with gptop as the default
         model_choice = st.selectbox(
             "Choose GPT Model:", 
             [gpt35, gpt4t, gpto, gptop, gptomini],
-            index=2  # Setting gpt-4o as the default
+            index=[gpt35, gpt4t, gpto, gptop, gptomini].index(default_model)  # Easy default model selection
         )
 
-        prompt_text = st.text_area("Enter your prompt:", value="What is this image?")
+        prompt_text = st.text_area("Enter your prompt:", value="Highlight the dialog area.")
         if st.button("Generate Text"):
             if not prompt_text.strip():
                 st.error("Please enter some prompt text.")
