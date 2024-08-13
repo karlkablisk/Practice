@@ -21,15 +21,17 @@ if uploaded_file is not None:
     img = Image.open(uploaded_file)
     img_array = np.array(img)
 
-    # Display the image in Streamlit
-    coords = st.image(img, use_column_width=True, output_format='auto', channels="RGB")
-    
-    # Check for image click event
-    if coords:
-        st.session_state['coords'] = coords['x'], coords['y']
-        st.session_state['rect'] = [coords['x'] - 10, coords['y'] - 10, coords['x'] + 10, coords['y'] + 10]
+    # Set up sliders to simulate click coordinates
+    st.write("Use the sliders to select a point on the image.")
+    x = st.slider("X coordinate", 0, img.width, 0)
+    y = st.slider("Y coordinate", 0, img.height, 0)
 
-    # Draw a rectangle around the clicked point
+    # Save the coordinates in the session state
+    if st.button("Save Coordinates"):
+        st.session_state['coords'] = (x, y)
+        st.session_state['rect'] = [x - 10, y - 10, x + 10, y + 10]
+
+    # Draw a rectangle around the selected point
     if 'rect' in st.session_state:
         img_with_rect = draw_rectangle(img.copy(), st.session_state['rect'])
         st.image(img_with_rect, use_column_width=True)
