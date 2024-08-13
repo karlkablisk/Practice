@@ -2,10 +2,10 @@ import os
 import streamlit as st
 from PIL import Image, ImageDraw
 from openai import OpenAI
+from dotenv import load_dotenv
 
-# Load OpenAI API key from the environment variable
-openai_api_key = os.getenv("OPENAI_API_KEY")
-client = OpenAI(api_key=openai_api_key)
+# Load dotenv in the main script, not in the class
+load_dotenv()
 
 # Models for text generation
 gpt35 = "gpt-3.5-turbo"
@@ -15,6 +15,9 @@ gptop = "gpt-4o-2024-08-06"
 gptomini = "gpt-4o-mini"
 
 class OpenAIStreamlitApp:
+    def __init__(self):
+        self.client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
+
     def draw_rectangle(self, image_path, coords):
         """Draws a rectangle on the image based on the given coordinates."""
         with Image.open(image_path) as img:
