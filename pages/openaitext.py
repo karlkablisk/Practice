@@ -2,7 +2,6 @@ import os
 import streamlit as st
 from openai import OpenAI
 
-
 # Models for text generation
 gpt35 = "gpt-3.5-turbo"
 gpt4t = "gpt-4-turbo"
@@ -13,7 +12,7 @@ gptomini = "gpt-4o-mini"
 class OpenAIStreamlitApp:
     def __init__(self):
         openai_api_key = os.getenv("OPENAI_API_KEY")
-        client = OpenAI(api_key=openai_api_key)
+        self.client = OpenAI(api_key=openai_api_key)  # Corrected assignment
 
     def generate_text(self, prompt, model):
         response = self.client.chat.completions.create(
