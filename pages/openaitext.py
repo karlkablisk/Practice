@@ -46,5 +46,5 @@ def run(self):
                 st.error(f"Error generating text: {e}")
 
 if __name__ == "__main__":
-app = OpenAIStreamlitApp()
-app.run()
+    app = OpenAIStreamlitApp()
+    app.run()
