@@ -2,10 +2,6 @@ import os
 import streamlit as st
 from PIL import Image, ImageDraw
 from openai import OpenAI
-from dotenv import load_dotenv
-
-# Load dotenv in the main script, not in the class
-load_dotenv()
 
 # Models for text generation
 gpt35 = "gpt-3.5-turbo"
@@ -16,6 +12,7 @@ gptomini = "gpt-4o-mini"
 
 class OpenAIStreamlitApp:
     def __init__(self):
+        # Initialize the OpenAI client with the API key from the environment variable
         self.client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
     def draw_rectangle(self, image_path, coords):
