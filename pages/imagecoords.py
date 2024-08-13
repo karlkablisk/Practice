@@ -59,19 +59,6 @@ class OpenAIStreamlitApp:
         )
         return response.choices[0].message.content
 
-    def decide_and_act(self, prompt, model, image_path=None):
-        """Decides whether to use the coordinate tool or respond with text."""
-        if "highlight" in prompt.lower() and image_path:
-            # AI decides to use the tool
-            # Let's assume the AI has somehow "determined" the coordinates based on its analysis
-            # For demonstration, we simulate it with predefined coordinates
-            simulated_coords = (100, 100, 300, 300)  # Replace with real AI logic if possible
-            output_path, coords = self.draw_rectangle(image_path, simulated_coords)
-            return f"Highlighted the area: {coords}. Image saved at {output_path}"
-        else:
-            # Default text-based response
-            return self.generate_text(prompt, model, image_path)
-
     def run(self):
         st.title('Image Text Box Drawer and Text Generator')
 
@@ -111,12 +98,11 @@ class OpenAIStreamlitApp:
                 st.error("Please enter some prompt text.")
             else:
                 try:
-                    # Decide to act based on the prompt
-                    generated_response = self.decide_and_act(prompt_text, model_choice, image_path if uploaded_file else None)
-                    st.text_area("Generated Response:", value=generated_response, height=300)
-                    st.success("Action executed successfully.")
+                    generated_text = self.generate_text(prompt_text, model_choice, image_path if uploaded_file else None)
+                    st.text_area("Generated Text:", value=generated_text, height=300)
+                    st.success("Text generated successfully.")
                 except Exception as e:
-                    st.error(f"Error generating response: {e}")
+                    st.error(f"Error generating text: {e}")
 
 if __name__ == "__main__":
     app = OpenAIStreamlitApp()
