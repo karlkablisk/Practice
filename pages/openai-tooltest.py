@@ -51,7 +51,7 @@ class OpenAIStreamlitApp:
             messages=[{"role": "user", "content": prompt}],
             max_tokens=150
         )
-        return response.choices[0].message['content']
+        return response.choices[0].message.content  # Correctly access the 'content'
 
     def get_temperature(self, location, unit="Celsius"):
         """Uses the assistant's tool to get the current temperature for a location."""
@@ -63,6 +63,7 @@ class OpenAIStreamlitApp:
         )
 
         # Start the run and handle tool invocation
+        temperature = "Unknown"
         with self.client.beta.threads.runs.stream(
             thread_id=thread.id,
             assistant_id=self.assistant.id
@@ -76,8 +77,10 @@ class OpenAIStreamlitApp:
                             # Simulate returning the temperature, e.g., "25" degrees
                             tool_output = {"tool_call_id": tool_call_id, "output": "25"}
                             stream.submit_tool_outputs([tool_output], event['data']['id'])
-            for text in stream.text_deltas:
-                print(text['text'], end="")
+                if 'text' in event:
+                    temperature = event['text']
+
+        return temperature
 
     def run(self):
         st.title('Text Generator and Temperature Assistant')
@@ -109,7 +112,8 @@ class OpenAIStreamlitApp:
                 st.error("Please enter a location.")
             else:
                 try:
-                    self.get_temperature(location, unit)
+                    temperature = self.get_temperature(location, unit)
+                    st.text_area("Retrieved Temperature:", value=temperature, height=50)
                     st.success("Temperature retrieved successfully.")
                 except Exception as e:
                     st.error(f"Error retrieving temperature: {e}")
