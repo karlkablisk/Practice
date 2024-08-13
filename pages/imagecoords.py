@@ -25,7 +25,7 @@ class OpenAIStreamlitApp:
         """Draws a rectangle on the image based on the given coordinates."""
         with Image.open(image_path) as img:
             draw = ImageDraw.Draw(img)
-            draw.rectangle(coords, outline="green", width=1)  # Stroke width is fixed at 1
+            draw.rectangle(coords, outline="green", width=1)  # Set stroke width to 1
             output_path = image_path.replace('.png', '_modified.png')
             img.save(output_path)
         return output_path, coords
@@ -64,48 +64,33 @@ class OpenAIStreamlitApp:
     def run(self):
         st.title('Image Text Box Drawer, Text Generator, and Rectangle Highlighter')
 
-        # Manual coordinate inputs
-        col1, col2, col3, col4 = st.columns(4)
-        with col1:
-            x1 = st.number_input('Enter X1 Coordinate', min_value=0, value=462)
-        with col2:
-            y1 = st.number_input('Enter Y1 Coordinate', min_value=0, value=80)
-        with col3:
-            x2 = st.number_input('Enter X2 Coordinate', min_value=0, value=926)
-        with col4:
-            y2 = st.number_input('Enter Y2 Coordinate', min_value=0, value=146)
-        coords = (x1, y1, x2, y2)
-
         uploaded_file = st.file_uploader("Choose an image file", type=["png", "jpg", "jpeg"])
         if uploaded_file is not None:
             image_path = f"./temp_{uploaded_file.name}"
             with open(image_path, 'wb') as f:
                 f.write(uploaded_file.getvalue())
 
-            st.subheader("Manual Rectangle Drawing")
-            if st.button('Draw Rectangle'):
-                modified_image_path, used_coords = self.draw_rectangle(image_path, coords)
-                st.image(modified_image_path, caption='Modified Image with Rectangle')
-                st.success(f"Rectangle drawn with coordinates: {used_coords}")
+            # Load the image to get its dimensions
+            image = Image.open(image_path)
+            img_width, img_height = image.size
 
             st.subheader("Draw to Highlight")
             drawing_mode = st.selectbox(
                 "Drawing tool:",
-                ("rect", "circle", "polygon", "transform"),
+                ("rect", "circle", "transform"),
             )
             stroke_color = st.color_picker("Stroke color hex: ")
-            bg_image = Image.open(image_path)
-            
-            # Adjust canvas to match the image size
+
             canvas_result = st_canvas(
                 fill_color="rgba(255, 165, 0, 0.3)",  # Fixed fill color with some opacity
-                stroke_width=1,  # Stroke width is fixed
+                stroke_width=1,  # Fixed stroke width
                 stroke_color=stroke_color,
-                background_image=bg_image,
+                background_image=image,  # Set the uploaded image as background
                 update_streamlit=True,
-                height=bg_image.height,
-                width=bg_image.width,
+                height=img_height,  # Match the canvas size to the image dimensions
+                width=img_width,
                 drawing_mode=drawing_mode,
+                display_toolbar=True,
                 key="draw_to_highlight",
             )
 
