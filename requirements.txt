@@ -7,6 +7,9 @@ streamlit
 openai
 #1.28.0 # may 10 2024 - will need embeddings code update and testing but will have voice
 
+#streamlit addons
+install streamlit-drawable-canvas
+
 #new lanchain
 langchain
 #==0.1.16
