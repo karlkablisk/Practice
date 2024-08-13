@@ -14,35 +14,38 @@ class OpenAIStreamlitApp:
         # Initialize the OpenAI client with the API key from the environment variable
         self.client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
-        # Define the assistant with a tool to get the current temperature
+        # Define the assistant with a tool to get the quantity of a specific fruit
         self.assistant = self.client.beta.assistants.create(
-            instructions="You are an assistant that can provide the current temperature using a tool.",
+            instructions="You are an assistant that can provide the quantity of specific fruits using a tool.",
             model="gpt-4o-2024-08-06",
             tools=[
                 {
                     "type": "function",
                     "function": {
-                        "name": "get_current_temperature",
-                        "description": "Get the current temperature for a specific location",
+                        "name": "get_fruit_quantity",
+                        "description": "Get the quantity of a specific fruit",
                         "parameters": {
                             "type": "object",
                             "properties": {
-                                "location": {
+                                "fruit": {
                                     "type": "string",
-                                    "description": "The city and state, e.g., San Francisco, CA"
-                                },
-                                "unit": {
-                                    "type": "string",
-                                    "enum": ["Celsius", "Fahrenheit"],
-                                    "description": "The temperature unit to use."
+                                    "description": "The name of the fruit, e.g., apple, pear"
                                 }
                             },
-                            "required": ["location", "unit"]
+                            "required": ["fruit"]
                         }
                     }
                 }
             ]
         )
+
+        # Define a simple fruit quantity mapping
+        self.fruit_quantities = {
+            "apple": 128,
+            "pear": 66,
+            "banana": 75,
+            "orange": 45
+        }
 
     def generate_text(self, prompt, model):
         """Uses the specified GPT model to generate a response based on the input prompt."""
@@ -54,59 +57,32 @@ class OpenAIStreamlitApp:
 
         message_content = response.choices[0].message.content
 
-        # Check if the AI's response indicates it needs to use the temperature tool
-        if "weather" in prompt.lower() or "temperature" in prompt.lower():
-            location = self.extract_location(prompt)
-            if location:
-                temperature = self.get_temperature(location)
-                return f"The current temperature in {location} is {temperature} degrees."
+        # Check if the AI's response indicates it needs to use the fruit tool
+        if "apple" in prompt.lower() or "pear" in prompt.lower() or "banana" in prompt.lower() or "orange" in prompt.lower():
+            fruit = self.extract_fruit(prompt)
+            if fruit:
+                st.warning("Fruit tool used")
+                quantity = self.get_fruit_quantity(fruit)
+                return f"There are {quantity} {fruit}s."
             else:
                 return message_content
         else:
             return message_content
 
-    def extract_location(self, prompt):
-        """Simple extraction of a location from the prompt."""
-        # In a real application, you would use a more sophisticated method to extract the location.
-        # Here, we'll just look for a keyword like "in" and take the next word.
-        words = prompt.split()
-        if "in" in words:
-            index = words.index("in")
-            if index + 1 < len(words):
-                return words[index + 1]
+    def extract_fruit(self, prompt):
+        """Simple extraction of a fruit name from the prompt."""
+        fruits = ["apple", "pear", "banana", "orange"]
+        for fruit in fruits:
+            if fruit in prompt.lower():
+                return fruit
         return None
 
-    def get_temperature(self, location, unit="Celsius"):
-        """Uses the assistant's tool to get the current temperature for a location."""
-        thread = self.client.beta.threads.create()
-        message = self.client.beta.threads.messages.create(
-            thread_id=thread.id,
-            role="user",
-            content=f"What is the current temperature in {location} in {unit}?"
-        )
-
-        # Start the run and handle tool invocation
-        temperature = "Unknown"
-        with self.client.beta.threads.runs.stream(
-            thread_id=thread.id,
-            assistant_id=self.assistant.id
-        ) as stream:
-            for event in stream.text_deltas:
-                if event.get('event') == 'thread.run.requires_action':
-                    tool_calls = event['data']['required_action']['submit_tool_outputs']['tool_calls']
-                    for tool_call in tool_calls:
-                        if tool_call['function']['name'] == 'get_current_temperature':
-                            tool_call_id = tool_call['id']
-                            # Simulate returning the temperature, e.g., "25" degrees
-                            tool_output = {"tool_call_id": tool_call_id, "output": "25"}
-                            stream.submit_tool_outputs([tool_output], event['data']['id'])
-                if 'text' in event:
-                    temperature = event['text']
-
-        return temperature
+    def get_fruit_quantity(self, fruit):
+        """Uses the assistant's tool to get the quantity of a specific fruit."""
+        return self.fruit_quantities.get(fruit.lower(), "Unknown")
 
     def run(self):
-        st.title('Text Generator and Temperature Assistant')
+        st.title('Text Generator and Fruit Quantity Assistant')
 
         # Dropdown for model selection with gpt-4o as the default
         model_choice = st.selectbox(
@@ -127,19 +103,18 @@ class OpenAIStreamlitApp:
                 except Exception as e:
                     st.error(f"Error generating text: {e}")
 
-        # Get temperature for a location using the assistant tool manually
-        location = st.text_input("Enter a location to get the temperature:")
-        unit = st.selectbox("Select unit", ["Celsius", "Fahrenheit"], index=0)
-        if st.button("Get Temperature"):
-            if not location.strip():
-                st.error("Please enter a location.")
+        # Manual input method to test the fruit quantity tool
+        fruit = st.text_input("Enter a fruit name to get its quantity:")
+        if st.button("Get Fruit Quantity"):
+            if not fruit.strip():
+                st.error("Please enter a fruit name.")
             else:
                 try:
-                    temperature = self.get_temperature(location, unit)
-                    st.text_area("Retrieved Temperature:", value=temperature, height=50)
-                    st.success("Temperature retrieved successfully.")
+                    quantity = self.get_fruit_quantity(fruit)
+                    st.text_area("Retrieved Quantity:", value=f"{quantity}", height=50)
+                    st.success("Fruit quantity retrieved successfully.")
                 except Exception as e:
-                    st.error(f"Error retrieving temperature: {e}")
+                    st.error(f"Error retrieving fruit quantity: {e}")
 
 if __name__ == "__main__":
     app = OpenAIStreamlitApp()
