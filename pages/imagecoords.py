@@ -2,6 +2,8 @@ import os
 import base64
 import streamlit as st
 from PIL import Image, ImageDraw
+from streamlit_drawable_canvas import st_canvas
+import pandas as pd
 from openai import OpenAI
 
 # Models for text generation
@@ -60,7 +62,7 @@ class OpenAIStreamlitApp:
         return response.choices[0].message.content
 
     def run(self):
-        st.title('Image Text Box Drawer and Text Generator')
+        st.title('Image Text Box Drawer, Text Generator, and Rectangle Highlighter')
 
         # Manual coordinate inputs
         col1, col2, col3, col4 = st.columns(4)
@@ -80,10 +82,38 @@ class OpenAIStreamlitApp:
             with open(image_path, 'wb') as f:
                 f.write(uploaded_file.getvalue())
 
+            st.subheader("Manual Rectangle Drawing")
             if st.button('Draw Rectangle'):
                 modified_image_path, used_coords = self.draw_rectangle(image_path, coords)
                 st.image(modified_image_path, caption='Modified Image with Rectangle')
                 st.success(f"Rectangle drawn with coordinates: {used_coords}")
+
+            st.subheader("Draw to Highlight")
+            drawing_mode = st.selectbox(
+                "Drawing tool:",
+                ("rect", "freedraw", "line", "circle", "transform", "polygon", "point"),
+            )
+            stroke_width = st.slider("Stroke width: ", 1, 25, 3)
+            stroke_color = st.color_picker("Stroke color hex: ")
+            bg_image = Image.open(image_path)
+            
+            canvas_result = st_canvas(
+                fill_color="rgba(255, 165, 0, 0.3)",  # Fixed fill color with some opacity
+                stroke_width=stroke_width,
+                stroke_color=stroke_color,
+                background_image=bg_image,
+                update_streamlit=True,
+                height=bg_image.height,
+                width=bg_image.width,
+                drawing_mode=drawing_mode,
+                key="draw_to_highlight",
+            )
+
+            # Show the drawn rectangles' coordinates
+            if canvas_result.json_data is not None:
+                objects = pd.json_normalize(canvas_result.json_data["objects"])
+                st.dataframe(objects[['left', 'top', 'width', 'height']])
+                st.success("Coordinates of drawn rectangles have been extracted.")
 
         # Dropdown for model selection with gptop as the default
         model_choice = st.selectbox(
