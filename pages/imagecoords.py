@@ -25,23 +25,29 @@ class OpenAIStreamlitApp:
             img.save(output_path)
         return output_path, coords
 
-    def generate_text(self, prompt, model, image=None):
-        """Uses the specified GPT model to generate a response based on the input prompt and image."""
-        # Prepare messages with or without image
-        messages = [{"role": "user", "content": prompt}]
-        
-        if image is not None:
-            # Convert image to base64
-            buffered = image.convert("RGB")
-            buffered.seek(0)
-            img_str = base64.b64encode(buffered.read()).decode('utf-8')
-            
-            # Append the image to the messages
-            messages.append({
-                "role": "user",
-                "content": "",
-                "image": img_str
-            })
+    def encode_image(self, image_path):
+        """Encodes an image file as a base64 string."""
+        with open(image_path, "rb") as image_file:
+            return base64.b64encode(image_file.read()).decode("utf-8")
+
+    def generate_text(self, prompt, model, image_path=None):
+        """Uses the specified GPT model to generate a response based on the input prompt."""
+        if image_path:
+            base64_image = self.encode_image(image_path)
+            messages = [
+                {"role": "system", "content": "You are a helpful assistant that can analyze images and respond in Markdown."},
+                {"role": "user", "content": [
+                    {"type": "text", "text": prompt},
+                    {"type": "image_url", "image_url": {
+                        "url": f"data:image/png;base64,{base64_image}"}
+                    }
+                ]}
+            ]
+        else:
+            messages = [
+                {"role": "system", "content": "You are a helpful assistant."},
+                {"role": "user", "content": prompt}
+            ]
         
         response = self.client.chat.completions.create(
             model=model,
@@ -66,12 +72,10 @@ class OpenAIStreamlitApp:
         coords = (x1, y1, x2, y2)
 
         uploaded_file = st.file_uploader("Choose an image file", type=["png", "jpg", "jpeg"])
-        image = None
         if uploaded_file is not None:
             image_path = f"./temp_{uploaded_file.name}"
             with open(image_path, 'wb') as f:
                 f.write(uploaded_file.getvalue())
-            image = Image.open(image_path)
 
             if st.button('Draw Rectangle'):
                 modified_image_path, used_coords = self.draw_rectangle(image_path, coords)
@@ -85,13 +89,13 @@ class OpenAIStreamlitApp:
             index=2  # Setting gpt-4o as the default
         )
 
-        prompt_text = st.text_area("Enter your prompt:")
+        prompt_text = st.text_area("Enter your prompt:", value="What is this image?")
         if st.button("Generate Text"):
             if not prompt_text.strip():
                 st.error("Please enter some prompt text.")
             else:
                 try:
-                    generated_text = self.generate_text(prompt_text, model_choice, image)
+                    generated_text = self.generate_text(prompt_text, model_choice, image_path if uploaded_file else None)
                     st.text_area("Generated Text:", value=generated_text, height=300)
                     st.success("Text generated successfully.")
                 except Exception as e:
