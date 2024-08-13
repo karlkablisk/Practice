@@ -1,4 +1,5 @@
 import os
+import base64
 import streamlit as st
 from PIL import Image, ImageDraw
 from openai import OpenAI
@@ -24,14 +25,30 @@ class OpenAIStreamlitApp:
             img.save(output_path)
         return output_path, coords
 
-    def generate_text(self, prompt, model):
-        """Uses the specified GPT model to generate a response based on the input prompt."""
+    def generate_text(self, prompt, model, image=None):
+        """Uses the specified GPT model to generate a response based on the input prompt and image."""
+        # Prepare messages with or without image
+        messages = [{"role": "user", "content": prompt}]
+        
+        if image is not None:
+            # Convert image to base64
+            buffered = image.convert("RGB")
+            buffered.seek(0)
+            img_str = base64.b64encode(buffered.read()).decode('utf-8')
+            
+            # Append the image to the messages
+            messages.append({
+                "role": "user",
+                "content": "",
+                "image": img_str
+            })
+        
         response = self.client.chat.completions.create(
             model=model,
-            messages=[{"role": "user", "content": prompt}],
+            messages=messages,
             max_tokens=150
         )
-        return response.choices[0].message.content  # Correct message access
+        return response.choices[0].message.content
 
     def run(self):
         st.title('Image Text Box Drawer and Text Generator')
@@ -49,10 +66,12 @@ class OpenAIStreamlitApp:
         coords = (x1, y1, x2, y2)
 
         uploaded_file = st.file_uploader("Choose an image file", type=["png", "jpg", "jpeg"])
+        image = None
         if uploaded_file is not None:
             image_path = f"./temp_{uploaded_file.name}"
             with open(image_path, 'wb') as f:
                 f.write(uploaded_file.getvalue())
+            image = Image.open(image_path)
 
             if st.button('Draw Rectangle'):
                 modified_image_path, used_coords = self.draw_rectangle(image_path, coords)
@@ -72,7 +91,7 @@ class OpenAIStreamlitApp:
                 st.error("Please enter some prompt text.")
             else:
                 try:
-                    generated_text = self.generate_text(prompt_text, model_choice)
+                    generated_text = self.generate_text(prompt_text, model_choice, image)
                     st.text_area("Generated Text:", value=generated_text, height=300)
                     st.success("Text generated successfully.")
                 except Exception as e:
