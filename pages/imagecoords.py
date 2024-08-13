@@ -2,8 +2,6 @@ import os
 import base64
 import streamlit as st
 from PIL import Image, ImageDraw
-from streamlit_drawable_canvas import st_canvas
-import pandas as pd
 from openai import OpenAI
 
 # Models for text generation
@@ -25,7 +23,7 @@ class OpenAIStreamlitApp:
         """Draws a rectangle on the image based on the given coordinates."""
         with Image.open(image_path) as img:
             draw = ImageDraw.Draw(img)
-            draw.rectangle(coords, outline="green", width=1)  # Set stroke width to 1
+            draw.rectangle(coords, outline="green", width=5)
             output_path = image_path.replace('.png', '_modified.png')
             img.save(output_path)
         return output_path, coords
@@ -62,7 +60,19 @@ class OpenAIStreamlitApp:
         return response.choices[0].message.content
 
     def run(self):
-        st.title('Image Text Box Drawer, Text Generator, and Rectangle Highlighter')
+        st.title('Image Text Box Drawer and Text Generator')
+
+        # Manual coordinate inputs
+        col1, col2, col3, col4 = st.columns(4)
+        with col1:
+            x1 = st.number_input('Enter X1 Coordinate', min_value=0, value=462)
+        with col2:
+            y1 = st.number_input('Enter Y1 Coordinate', min_value=0, value=80)
+        with col3:
+            x2 = st.number_input('Enter X2 Coordinate', min_value=0, value=926)
+        with col4:
+            y2 = st.number_input('Enter Y2 Coordinate', min_value=0, value=146)
+        coords = (x1, y1, x2, y2)
 
         uploaded_file = st.file_uploader("Choose an image file", type=["png", "jpg", "jpeg"])
         if uploaded_file is not None:
@@ -70,35 +80,10 @@ class OpenAIStreamlitApp:
             with open(image_path, 'wb') as f:
                 f.write(uploaded_file.getvalue())
 
-            # Load the image to get its dimensions
-            image = Image.open(image_path)
-            img_width, img_height = image.size
-
-            st.subheader("Draw to Highlight")
-            drawing_mode = st.selectbox(
-                "Drawing tool:",
-                ("rect", "circle", "transform"),
-            )
-            stroke_color = st.color_picker("Stroke color hex: ")
-
-            canvas_result = st_canvas(
-                fill_color="rgba(255, 165, 0, 0.3)",  # Fixed fill color with some opacity
-                stroke_width=1,  # Fixed stroke width
-                stroke_color=stroke_color,
-                background_image=image,  # Set the uploaded image as background
-                update_streamlit=True,
-                height=img_height,  # Match the canvas size to the image dimensions
-                width=img_width,
-                drawing_mode=drawing_mode,
-                display_toolbar=True,
-                key="draw_to_highlight",
-            )
-
-            # Show the drawn rectangles' coordinates
-            if canvas_result.json_data is not None:
-                objects = pd.json_normalize(canvas_result.json_data["objects"])
-                st.dataframe(objects[['left', 'top', 'width', 'height']])
-                st.success("Coordinates of drawn rectangles have been extracted.")
+            if st.button('Draw Rectangle'):
+                modified_image_path, used_coords = self.draw_rectangle(image_path, coords)
+                st.image(modified_image_path, caption='Modified Image with Rectangle')
+                st.success(f"Rectangle drawn with coordinates: {used_coords}")
 
         # Dropdown for model selection with gptop as the default
         model_choice = st.selectbox(
