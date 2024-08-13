@@ -12,6 +12,8 @@ openai_api_key = os.getenv("OPENAI_API_KEY")
 client = OpenAI(api_key=openai_api_key)
 
 # Models for text generation
+gpt35 = "gpt-3.5-turbo"
+gpt4t = "gpt-4-turbo"
 gpto = "gpt-4o"
 gptop = "gpt-4o-2024-08-06"
 gptomini = "gpt-4o-mini"
