@@ -51,7 +51,30 @@ class OpenAIStreamlitApp:
             messages=[{"role": "user", "content": prompt}],
             max_tokens=150
         )
-        return response.choices[0].message.content  # Correctly access the 'content'
+
+        message_content = response.choices[0].message.content
+
+        # Check if the AI's response indicates it needs to use the temperature tool
+        if "weather" in prompt.lower() or "temperature" in prompt.lower():
+            location = self.extract_location(prompt)
+            if location:
+                temperature = self.get_temperature(location)
+                return f"The current temperature in {location} is {temperature} degrees."
+            else:
+                return message_content
+        else:
+            return message_content
+
+    def extract_location(self, prompt):
+        """Simple extraction of a location from the prompt."""
+        # In a real application, you would use a more sophisticated method to extract the location.
+        # Here, we'll just look for a keyword like "in" and take the next word.
+        words = prompt.split()
+        if "in" in words:
+            index = words.index("in")
+            if index + 1 < len(words):
+                return words[index + 1]
+        return None
 
     def get_temperature(self, location, unit="Celsius"):
         """Uses the assistant's tool to get the current temperature for a location."""
@@ -104,7 +127,7 @@ class OpenAIStreamlitApp:
                 except Exception as e:
                     st.error(f"Error generating text: {e}")
 
-        # Get temperature for a location using the assistant tool
+        # Get temperature for a location using the assistant tool manually
         location = st.text_input("Enter a location to get the temperature:")
         unit = st.selectbox("Select unit", ["Celsius", "Fahrenheit"], index=0)
         if st.button("Get Temperature"):
