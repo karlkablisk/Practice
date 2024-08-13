@@ -1,7 +1,10 @@
 import os
 import streamlit as st
 from openai import OpenAI
-from dotenv import load_dotenv
+
+# Load OpenAI API key from the environment variable
+openai_api_key = os.getenv("OPENAI_API_KEY")
+client = OpenAI(api_key=openai_api_key)
 
 # Models for text generation
 gpt35 = "gpt-3.5-turbo"
