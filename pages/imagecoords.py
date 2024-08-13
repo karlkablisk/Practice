@@ -15,10 +15,6 @@ gptop = "gpt-4o-2024-08-06"
 gptomini = "gpt-4o-mini"
 
 class OpenAIStreamlitApp:
-    def __init__(self):
-        load_dotenv()
-        self.client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
-
     def draw_rectangle(self, image_path, coords):
         """Draws a rectangle on the image based on the given coordinates."""
         with Image.open(image_path) as img:
