@@ -14,6 +14,9 @@ pandas
 numpy 
 svgpathtools
 
+#py
+pyscreenshot
+
 #new lanchain
 langchain
 #==0.1.16
