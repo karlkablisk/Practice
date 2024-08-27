@@ -57,7 +57,7 @@ if st.button("Generate Image from Text"):
                 model=selected_config["model"],
                 prompt=text_prompt,
                 size=selected_config["size"],
-                quality=selected_config["quality"] if selected_config["model"] == "dall-e-3" else None,
+                quality=selected_config["quality"],
                 n=1
             )
             image_url = response.data[0].url
