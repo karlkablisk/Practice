@@ -2,7 +2,8 @@ import os
 import streamlit as st
 from openai import OpenAI
 from PIL import Image
-import io
+import requests
+from io import BytesIO
 
 # Load OpenAI API key from the environment variable
 openai_api_key = os.getenv("OPENAI_API_KEY")
@@ -51,13 +52,15 @@ text_prompt = st.text_input("Enter a text prompt for image generation:")
 if st.button("Generate Image from Text"):
     if text_prompt:
         try:
-            response = client.images.create(
+            response = client.images.generate(
+                model=selected_model.lower().replace(" ", "-"),
                 prompt=text_prompt,
-                n=1,
-                size=selected_resolution
+                size=selected_resolution.replace("×", "x"),
+                quality=selected_quality.lower(),
+                n=1
             )
-            image_data = response["data"][0]["image"]
-            image = Image.open(io.BytesIO(image_data))
+            image_url = response.data[0].url
+            image = Image.open(BytesIO(requests.get(image_url).content))
             st.image(image, caption="Generated Image from Text", use_column_width=True)
         except Exception as e:
             st.error(f"Failed to generate image: {e}")
@@ -72,14 +75,15 @@ if st.button("Generate Image from Image and Text"):
     if uploaded_file and additional_text_prompt:
         try:
             image_bytes = uploaded_file.read()
-            response = client.images.create(
-                prompt=additional_text_prompt,
+            response = client.images.edit(
+                model="dall-e-2",  # Image edits (inpainting) are DALL·E 2 specific
                 image=image_bytes,
-                n=1,
-                size=selected_resolution
+                prompt=additional_text_prompt,
+                size=selected_resolution.replace("×", "x"),
+                n=1
             )
-            image_data = response["data"][0]["image"]
-            modified_image = Image.open(io.BytesIO(image_data))
+            image_url = response.data[0].url
+            modified_image = Image.open(BytesIO(requests.get(image_url).content))
             st.image(modified_image, caption="Modified Image based on Input", use_column_width=True)
         except Exception as e:
             st.error(f"Failed to generate image: {e}")
@@ -94,16 +98,24 @@ if st.button("Inpaint Image"):
     if inpainting_file and inpainting_text_prompt:
         try:
             image_bytes = inpainting_file.read()
-            response = client.images.create_edit(
-                prompt=inpainting_text_prompt,
+            response = client.images.edit(
+                model="dall-e-2",  # Inpainting is specific to DALL·E 2
                 image=image_bytes,
-                mask=None,  # If you want to provide a specific mask
-                n=1,
-                size=selected_resolution
+                prompt=inpainting_text_prompt,
+                size=selected_resolution.replace("×", "x"),
+                n=1
             )
-            inpainted_image = Image.open(io.BytesIO(response["data"][0]["image"]))
+            inpainted_image = Image.open(BytesIO(requests.get(response.data[0].url).content))
             st.image(inpainted_image, caption="Inpainted Image", use_column_width=True)
         except Exception as e:
             st.error(f"Failed to inpaint image: {e}")
     else:
         st.warning("Please upload an image and enter a text prompt.")
+
+# Explanation of Inpainting
+st.header("Explanation: Inpainting vs. Image Modification")
+st.write("""
+- **Text-to-Image**: Generates an entirely new image based on the text prompt provided.
+- **Image and Text-based Generation**: Modifies or extends the uploaded image based on the provided text.
+- **Inpainting**: Edits or fills in specific areas of the uploaded image based on the text prompt. 
+  Inpainting typically involves providing
