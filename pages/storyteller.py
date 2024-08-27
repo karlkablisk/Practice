@@ -1,7 +1,7 @@
 import os
 import streamlit as st
 from openai import OpenAI
-  
+
 # Initialize the OpenAI client with the API key from the environment variable
 client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
@@ -14,12 +14,13 @@ st.title("Interactive RPG Storytelling with GPT-4o-mini")
 if "character_created" not in st.session_state:
     st.session_state.character_created = False
 
-if not st.session_state.character_created:
+@st.fragment
+def character_creation():
     st.header("Create Your Character")
-    
+
     character_name = st.text_input("Enter your character's name:")
-    character_class = st.text_input("Enter your character's class (ex. Warrior, Mage, ...Monkey:")
-    character_race = st.text_input("Enter your character's class (ex. Human, Elf, Alien:")
+    character_class = st.text_input("Enter your character's class (ex. Warrior, Mage, Monkey):")
+    character_race = st.text_input("Enter your character's race (ex. Human, Elf, Alien):")
     character_level = st.slider("Choose your level:", 1, 20, 1)
     character_background = st.text_area("Describe your character's background:")
 
@@ -33,8 +34,12 @@ if not st.session_state.character_created:
                 "level": character_level,
                 "background": character_background
             }
+            st.rerun()
         else:
             st.error("Please complete all character fields to start your adventure.")
+
+if not st.session_state.character_created:
+    character_creation()
 else:
     # Character Summary
     st.sidebar.header("Your Character")
@@ -46,7 +51,7 @@ else:
 
     # Story container
     st.write(f"**Welcome, {st.session_state.character['name']} the {st.session_state.character['class']} of {st.session_state.character['race']} race, Level {st.session_state.character['level']}**")
-    
+
     # Initialize story history
     if "story" not in st.session_state:
         st.session_state.story = [
@@ -58,47 +63,51 @@ else:
         with st.container():
             st.markdown(f"**{message['role'].capitalize()}:** {message['content']}")
 
-    # Input columns for user actions
-    col1, col2 = st.columns(2)
+    @st.fragment
+    def action_fragment():
+        col1, col2 = st.columns(2)
 
-    with col1:
-        user_action = st.text_input("What will you do?", "")
+        with col1:
+            user_action = st.text_input("What will you do?", "")
 
-    with col2:
-        st.write("")
+        with col2:
+            st.write("")
 
-    if st.button("Take Action"):
-        if user_action:
-            # Add user action to the story
-            st.session_state.story.append({"role": "user", "content": user_action})
-            
-            # Display user's action
-            with st.container():
-                st.markdown(f"**You:** {user_action}")
-            
-            # Generate story continuation using GPT-4o-mini
-            try:
-                response = client.chat.completions.create(
-                    model=model,
-                    messages=[
-                        {"role": "system", "content": f"You are a {st.session_state.character['class']} named {st.session_state.character['name']} from the {st.session_state.character['race']} race."},
-                        *st.session_state.story
-                    ],
-                    max_tokens=200
-                ).choices[0].message.content
-                
-                # Display AI response in the story
+        if st.button("Take Action"):
+            if user_action:
+                # Add user action to the story
+                st.session_state.story.append({"role": "user", "content": user_action})
+
+                # Display user's action
                 with st.container():
-                    st.markdown(f"**Narrator:** {response}")
-                
-                # Add response to the story history
-                st.session_state.story.append({"role": "assistant", "content": response})
-            
-            except Exception as e:
-                st.error(f"Error generating response: {e}")
+                    st.markdown(f"**You:** {user_action}")
+
+                # Generate story continuation using GPT-4o-mini
+                try:
+                    response = client.chat.completions.create(
+                        model=model,
+                        messages=[
+                            {"role": "system", "content": f"You are a {st.session_state.character['class']} named {st.session_state.character['name']} from the {st.session_state.character['race']} race."},
+                            *st.session_state.story
+                        ],
+                        max_tokens=2000
+                    ).choices[0].message.content
+
+                    # Display AI response in the story
+                    with st.container():
+                        st.markdown(f"**Narrator:** {response}")
+
+                    # Add response to the story history
+                    st.session_state.story.append({"role": "assistant", "content": response})
+
+                except Exception as e:
+                    st.error(f"Error generating response: {e}")
+
+    action_fragment()
 
     # End the adventure or continue
     if st.button("End Adventure"):
         st.write("**Your adventure has come to an end. Thank you for playing!**")
         st.session_state.story.clear()
         st.session_state.character_created = False
+        st.rerun()
