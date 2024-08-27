@@ -1,4 +1,5 @@
 import streamlit as st
+import os
 import openai
 from io import BytesIO
 import base64
