@@ -2,8 +2,7 @@ import os
 import streamlit as st
 from openai import OpenAI
 from PIL import Image
-import requests
-from io import BytesIO
+import io
 
 # Load OpenAI API key from the environment variable
 openai_api_key = os.getenv("OPENAI_API_KEY")
@@ -26,7 +25,7 @@ resolutions = {
 
 # User selections
 selected_model = st.selectbox("Select DALL·E Model", models)
-selected_quality = st.selectbox("Select Image Quality", qualities)
+selected_quality = st.selectbox("Select Image Quality", qualities if selected_model == "DALL·E 3" else ["Standard"])
 selected_resolution = st.selectbox("Select Image Resolution", list(resolutions.keys()))
 
 # Determine the price based on the selected options
@@ -55,13 +54,12 @@ if st.button("Generate Image from Text"):
             response = client.images.generate(
                 model=selected_model.lower().replace(" ", "-"),
                 prompt=text_prompt,
-                size=selected_resolution.replace("×", "x"),
-                quality=selected_quality.lower(),
-                n=1
+                size=selected_resolution,
+                quality=selected_quality.lower() if selected_model == "DALL·E 3" else None,
+                n=1,
             )
             image_url = response.data[0].url
-            image = Image.open(BytesIO(requests.get(image_url).content))
-            st.image(image, caption="Generated Image from Text", use_column_width=True)
+            st.image(image_url, caption="Generated Image from Text", use_column_width=True)
         except Exception as e:
             st.error(f"Failed to generate image: {e}")
     else:
@@ -76,15 +74,14 @@ if st.button("Generate Image from Image and Text"):
         try:
             image_bytes = uploaded_file.read()
             response = client.images.edit(
-                model="dall-e-2",  # Image edits (inpainting) are DALL·E 2 specific
-                image=image_bytes,
+                model="dall-e-2",
+                image=io.BytesIO(image_bytes),
                 prompt=additional_text_prompt,
-                size=selected_resolution.replace("×", "x"),
-                n=1
+                n=1,
+                size=selected_resolution
             )
             image_url = response.data[0].url
-            modified_image = Image.open(BytesIO(requests.get(image_url).content))
-            st.image(modified_image, caption="Modified Image based on Input", use_column_width=True)
+            st.image(image_url, caption="Modified Image based on Input", use_column_width=True)
         except Exception as e:
             st.error(f"Failed to generate image: {e}")
     else:
@@ -99,24 +96,16 @@ if st.button("Inpaint Image"):
         try:
             image_bytes = inpainting_file.read()
             response = client.images.edit(
-                model="dall-e-2",  # Inpainting is specific to DALL·E 2
-                image=image_bytes,
+                model="dall-e-2",
+                image=io.BytesIO(image_bytes),
                 prompt=inpainting_text_prompt,
-                size=selected_resolution.replace("×", "x"),
-                n=1
+                n=1,
+                size=selected_resolution,
+                mask=None  # Assuming no mask is provided; in a real use case, provide a mask here
             )
-            inpainted_image = Image.open(BytesIO(requests.get(response.data[0].url).content))
-            st.image(inpainted_image, caption="Inpainted Image", use_column_width=True)
+            image_url = response.data[0].url
+            st.image(image_url, caption="Inpainted Image", use_column_width=True)
         except Exception as e:
             st.error(f"Failed to inpaint image: {e}")
     else:
         st.warning("Please upload an image and enter a text prompt.")
-
-# Explanation of Inpainting
-st.header("Explanation: Inpainting vs. Image Modification")
-st.write("""
-- **Text-to-Image**: Generates an entirely new image based on the text prompt provided.
-- **Image and Text-based Generation**: Modifies or extends the uploaded image based on the provided text.
-- **Inpainting**: Edits or fills in specific areas of the uploaded image based on the text prompt. 
-  Inpainting typically involves providing a mask or indicating which part of the image to modify.
-""")
