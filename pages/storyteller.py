@@ -18,7 +18,7 @@ if not st.session_state.character_created:
     st.header("Create Your Character")
     
     character_name = st.text_input("Enter your character's name:")
-    character_class = st.selectbox("Choose your class:", ["Warrior", "Mage", "Rogue", "Bard"])
+    character_class = st.text_input("Enter your character's class:")
     character_race = st.selectbox("Choose your race:", ["Human", "Elf", "Dwarf", "Orc"])
     character_level = st.slider("Choose your level:", 1, 20, 1)
     character_background = st.text_area("Describe your character's background:")
