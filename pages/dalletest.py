@@ -4,6 +4,7 @@ from openai import OpenAI
 from PIL import Image
 import requests
 from io import BytesIO
+import base64
 
 # Load OpenAI API key from the environment variable
 openai_api_key = os.getenv("OPENAI_API_KEY")
@@ -47,20 +48,35 @@ price_mapping = {
 price = price_mapping.get(selected_option, "Unknown")
 st.write(f"Price: {price}")
 
+def generate_dalle_3_image(prompt, size, quality):
+    response = client.images.generate(
+        model="dall-e-3",
+        prompt=prompt,
+        size=size,
+        quality=quality,
+        n=1
+    )
+    return response.data[0].url
+
+def generate_dalle_2_image(prompt, size):
+    response = client.Image.create(
+        prompt=prompt,
+        n=1,
+        size=size,
+    )
+    return response["data"][0]["url"]
+
 # Option 1: Text-to-Image
 st.header("Option 1: Text-to-Image")
 text_prompt = st.text_input("Enter a text prompt for image generation:")
 if st.button("Generate Image from Text"):
     if text_prompt:
         try:
-            response = client.images.generate(
-                model=selected_config["model"],
-                prompt=text_prompt,
-                size=selected_config["size"],
-                quality=selected_config["quality"],
-                n=1
-            )
-            image_url = response.data[0].url
+            if selected_config["model"] == "dall-e-3":
+                image_url = generate_dalle_3_image(text_prompt, selected_config["size"], selected_config["quality"])
+            elif selected_config["model"] == "dall-e-2":
+                image_url = generate_dalle_2_image(text_prompt, selected_config["size"])
+            
             image = Image.open(BytesIO(requests.get(image_url).content))
             st.image(image, caption="Generated Image from Text", use_column_width=True)
         except Exception as e:
