@@ -87,10 +87,18 @@ if st.button("Generate Image from Text"):
 st.header("Option 2: Image and Text-based Generation")
 uploaded_file = st.file_uploader("Upload an image to modify:")
 additional_text_prompt = st.text_input("Enter additional text for image generation:")
+
 if st.button("Generate Image from Image and Text"):
     if uploaded_file and additional_text_prompt:
         try:
-            image_bytes = uploaded_file.read()
+            # Open the uploaded image file
+            image = Image.open(uploaded_file)
+            
+            # Convert the image to PNG format
+            with BytesIO() as output:
+                image.save(output, format="PNG")
+                image_bytes = output.getvalue()
+
             response = client.images.edit(
                 model="dall-e-2",  # Image edits (inpainting) are DALL·E 2 specific
                 image=image_bytes,
@@ -110,10 +118,18 @@ if st.button("Generate Image from Image and Text"):
 st.header("Option 3: Inpainting (Image Editing)")
 inpainting_file = st.file_uploader("Upload an image for inpainting (select an area to modify):")
 inpainting_text_prompt = st.text_input("Enter a text prompt for inpainting:")
+
 if st.button("Inpaint Image"):
     if inpainting_file and inpainting_text_prompt:
         try:
-            image_bytes = inpainting_file.read()
+            # Open the uploaded image file
+            image = Image.open(inpainting_file)
+            
+            # Convert the image to PNG format
+            with BytesIO() as output:
+                image.save(output, format="PNG")
+                image_bytes = output.getvalue()
+
             response = client.images.edit(
                 model="dall-e-2",  # Inpainting is specific to DALL·E 2
                 image=image_bytes,
