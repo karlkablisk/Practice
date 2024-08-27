@@ -59,6 +59,17 @@ price_mapping = {
 price = price_mapping.get(selected_option, "Unknown")
 st.write(f"Price: {price}")
 
+# Function to convert images to RGBA format and save as PNG
+def convert_image_to_png(image):
+    if image.mode in ['RGBA', 'LA', 'L']:
+        pass  # Image is already in a valid format
+    else:
+        image = image.convert('RGBA')  # Convert to RGBA
+
+    with BytesIO() as output:
+        image.save(output, format="PNG")
+        return output.getvalue()
+
 # Option 1: Text-to-Image
 st.header("Option 1: Text-to-Image")
 text_prompt = st.text_input("Enter a text prompt for image generation:")
@@ -94,10 +105,8 @@ if st.button("Generate Image from Image and Text"):
             # Open the uploaded image file
             image = Image.open(uploaded_file)
             
-            # Convert the image to PNG format
-            with BytesIO() as output:
-                image.save(output, format="PNG")
-                image_bytes = output.getvalue()
+            # Convert the image to PNG with RGBA format
+            image_bytes = convert_image_to_png(image)
 
             response = client.images.edit(
                 model="dall-e-2",  # Image edits (inpainting) are DALL·E 2 specific
@@ -125,10 +134,8 @@ if st.button("Inpaint Image"):
             # Open the uploaded image file
             image = Image.open(inpainting_file)
             
-            # Convert the image to PNG format
-            with BytesIO() as output:
-                image.save(output, format="PNG")
-                image_bytes = output.getvalue()
+            # Convert the image to PNG with RGBA format
+            image_bytes = convert_image_to_png(image)
 
             response = client.images.edit(
                 model="dall-e-2",  # Inpainting is specific to DALL·E 2
