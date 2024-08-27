@@ -2,13 +2,24 @@ import os
 import streamlit as st
 from openai import OpenAI
 from PIL import Image
-import requests
 from io import BytesIO
-import base64
+import requests
+
+# Add the root directory to the Python path
+import sys
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+
+# Import the DALL-E 2 and DALL-E 3 generator classes
+from dalle2gen import Dalle2Generator
+from dalle3gen import Dalle3Generator
 
 # Load OpenAI API key from the environment variable
 openai_api_key = os.getenv("OPENAI_API_KEY")
 client = OpenAI(api_key=openai_api_key)
+
+# Initialize the generators
+dalle2_generator = Dalle2Generator(client)
+dalle3_generator = Dalle3Generator(client)
 
 # Streamlit UI setup
 st.title("DALL·E Image Generation with OpenAI")
@@ -48,24 +59,6 @@ price_mapping = {
 price = price_mapping.get(selected_option, "Unknown")
 st.write(f"Price: {price}")
 
-def generate_dalle_3_image(prompt, size, quality):
-    response = client.images.generate(
-        model="dall-e-3",
-        prompt=prompt,
-        size=size,
-        quality=quality,
-        n=1
-    )
-    return response.data[0].url
-
-def generate_dalle_2_image(prompt, size):
-    response = client.Image.create(
-        prompt=prompt,
-        n=1,
-        size=size,
-    )
-    return response["data"][0]["url"]
-
 # Option 1: Text-to-Image
 st.header("Option 1: Text-to-Image")
 text_prompt = st.text_input("Enter a text prompt for image generation:")
@@ -73,11 +66,17 @@ if st.button("Generate Image from Text"):
     if text_prompt:
         try:
             if selected_config["model"] == "dall-e-3":
-                image_url = generate_dalle_3_image(text_prompt, selected_config["size"], selected_config["quality"])
+                image = dalle3_generator.generate_image(
+                    prompt=text_prompt, 
+                    size=selected_config["size"], 
+                    quality=selected_config["quality"]
+                )
             elif selected_config["model"] == "dall-e-2":
-                image_url = generate_dalle_2_image(text_prompt, selected_config["size"])
+                image = dalle2_generator.generate_image(
+                    prompt=text_prompt, 
+                    size=selected_config["size"]
+                )
             
-            image = Image.open(BytesIO(requests.get(image_url).content))
             st.image(image, caption="Generated Image from Text", use_column_width=True)
         except Exception as e:
             st.error(f"Failed to generate image: {e}")
