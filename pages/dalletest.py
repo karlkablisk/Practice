@@ -118,4 +118,5 @@ st.write("""
 - **Text-to-Image**: Generates an entirely new image based on the text prompt provided.
 - **Image and Text-based Generation**: Modifies or extends the uploaded image based on the provided text.
 - **Inpainting**: Edits or fills in specific areas of the uploaded image based on the text prompt. 
-  Inpainting typically involves providing
+  Inpainting typically involves providing a mask or indicating which part of the image to modify.
+""")
