@@ -1,7 +1,7 @@
 import os
 import streamlit as st
 from openai import OpenAI
-from llama_index.core import VectorStoreIndex, SimpleDirectoryReader
+from llama_index.core import VectorStoreIndex, SimpleDirectoryReader, Document
 from PyPDF2 import PdfReader
 from dotenv import load_dotenv
 
@@ -37,30 +37,46 @@ class OpenAIRAGApp:
         return response
 
     def run(self):
-        st.title('PDF Upload and AI Question Answering with RAG')
+        st.title('PDF/Text Input and AI Question Answering with RAG')
 
-        uploaded_file = st.file_uploader("Upload a PDF file", type="pdf")
-        if uploaded_file is not None:
-            pdf_text = self.load_pdf_text(uploaded_file)
-            documents = SimpleDirectoryReader(pdf_text).load_data()
-            st.success("PDF file successfully loaded and processed.")
+        # Choose between PDF or text input
+        input_type = st.radio("Choose input type:", ("PDF File", "Text Input"))
 
-            query = st.text_input("Enter your question:")
-            if st.button("Get Answer"):
-                if not query.strip():
-                    st.error("Please enter a question.")
-                else:
-                    model_choice = st.selectbox(
-                        "Choose GPT Model:", 
-                        [gpt35, gpt4t, gpto, gptop, gptomini],
-                        index=[gpt35, gpt4t, gpto, gptop, gptomini].index(default_model)
-                    )
-                    try:
-                        response = self.perform_rag(documents, query, model_choice)
-                        st.text_area("Generated Response:", value=response, height=300)
-                        st.success("Answer generated successfully.")
-                    except Exception as e:
-                        st.error(f"Error generating answer: {e}")
+        if input_type == "PDF File":
+            uploaded_file = st.file_uploader("Upload a PDF file", type="pdf")
+            if uploaded_file is not None:
+                pdf_text = self.load_pdf_text(uploaded_file)
+                documents = [Document(pdf_text)]
+                st.success("PDF file successfully loaded and processed.")
+            else:
+                documents = None
+                st.info("Please upload a PDF file.")
+
+        else:
+            text_input = st.text_area("Enter your text:")
+            if text_input:
+                documents = [Document(text_input)]
+                st.success("Text input successfully processed.")
+            else:
+                documents = None
+                st.info("Please enter some text.")
+
+        query = st.text_input("Enter your question:")
+        if st.button("Get Answer") and documents:
+            if not query.strip():
+                st.error("Please enter a question.")
+            else:
+                model_choice = st.selectbox(
+                    "Choose GPT Model:", 
+                    [gpt35, gpt4t, gpto, gptop, gptomini],
+                    index=[gpt35, gpt4t, gpto, gptop, gptomini].index(default_model)
+                )
+                try:
+                    response = self.perform_rag(documents, query, model_choice)
+                    st.text_area("Generated Response:", value=response, height=300)
+                    st.success("Answer generated successfully.")
+                except Exception as e:
+                    st.error(f"Error generating answer: {e}")
 
 if __name__ == "__main__":
     app = OpenAIRAGApp()
