@@ -38,6 +38,7 @@ orjson==3.8.5
 #RAG set
 gradio
 pypdf
+PyPDF2
 chromadb
 tiktoken
 python-dotenv
