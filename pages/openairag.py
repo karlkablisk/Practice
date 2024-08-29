@@ -91,5 +91,14 @@ def main():
         st.subheader("Table Output")
         st.dataframe(table_output)
 
+        st.subheader("Ask a Question")
+        user_question = st.text_input("Enter your question about the document:")
+        
+        if user_question:
+            generated_answer = app.generate_text(user_question, default_model)
+            st.subheader("Generated Answer")
+            st.write(generated_answer)
+
 if __name__ == "__main__":
+    app = OpenAIStreamlitApp()
     main()
