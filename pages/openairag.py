@@ -24,15 +24,24 @@ gptomini = "gpt-4o-mini"
 # Set the default model
 default_model = gptomini
 
-class ScienceDirectDocument(BaseModel):
-    journal: str
-    paper_title:str
-    authors: list[str]
-    abstract: str
-    publication_date: str
-    keywords: list[str]
-    doi: str
-    topics: list[str] = Field(default_factory=list, description="Topics covered by the document. Examples include Computer Science, Biology, Chemistry, etc.")
+class OpenAIStreamlitApp:
+    def __init__(self):
+        # Initialize the OpenAI client with the API key from the environment variable
+        self.client = ChatOpenAI(model_name=default_model, temperature=0)
+
+    def generate_text(self, prompt):
+        """Uses the specified GPT model to generate a response based on the input prompt."""
+        messages = [
+            {"role": "system", "content": "You are a helpful assistant."},
+            {"role": "user", "content": prompt}
+        ]
+        
+        response = self.client.completions.create(
+            model=default_model,
+            messages=messages,
+            max_tokens=150
+        )
+        return response.choices[0].message.content
 
 def process_and_classify_document(filename):
     loader = PyPDFLoader(filename)
@@ -95,10 +104,10 @@ def main():
         user_question = st.text_input("Enter your question about the document:")
         
         if user_question:
-            generated_answer = app.generate_text(user_question, default_model)
+            app = OpenAIStreamlitApp()
+            generated_answer = app.generate_text(user_question)
             st.subheader("Generated Answer")
             st.write(generated_answer)
 
 if __name__ == "__main__":
-    app = OpenAIStreamlitApp()
     main()
