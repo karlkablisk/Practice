@@ -35,7 +35,7 @@ orjson==3.8.5
 
 #RAG set
 gradio
-oynx
+onnx
 pypdf
 chromadb
 tiktoken
