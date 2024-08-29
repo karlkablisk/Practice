@@ -28,6 +28,8 @@ langchain_openai
 faiss-cpu
 #==1.7.4
 #fastembed
+llama-index
+
 
 #??
 orjson==3.8.5 
