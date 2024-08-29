@@ -31,3 +31,12 @@ fastembed
 
 #??
 orjson==3.8.5 
+
+
+#RAG set
+gradio
+pypdf
+chromadb
+tiktoken
+python-dotenv
+pandas
