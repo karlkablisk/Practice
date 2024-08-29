@@ -27,7 +27,7 @@ langchain_openai
 #vectorstore
 faiss-cpu
 #==1.7.4
-fastembed
+#fastembed
 
 #??
 orjson==3.8.5 
