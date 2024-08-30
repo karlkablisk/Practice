@@ -1,7 +1,6 @@
 import os
 import openai
 import streamlit as st
-import pandas as pd
 import numpy as np
 from scipy.spatial.distance import cosine
 
@@ -14,11 +13,11 @@ def get_embedding(text, model="text-embedding-3-small"):
     return openai.Embedding.create(input=[text], model=model).data[0].embedding
 
 # Function to search for the most relevant context
-def search_context(df, query, n=3):
+def search_context(contexts, query):
     query_embedding = get_embedding(query, model='text-embedding-3-small')
-    df['similarities'] = df.embedding.apply(lambda x: 1 - cosine(np.array(x), np.array(query_embedding)))
-    top_contexts = df.sort_values('similarities', ascending=False).head(n)
-    return top_contexts['context'].values
+    similarities = [1 - cosine(np.array(get_embedding(context)), query_embedding) for context in contexts]
+    top_index = np.argmax(similarities)
+    return contexts[top_index]
 
 # Function to generate the answer
 def generate_answer(context, question):
@@ -37,25 +36,23 @@ def generate_answer(context, question):
     )
     return response.choices[0].text.strip()
 
-# Load data
-@st.cache_data
-def load_data():
-    df = pd.read_csv('context_data.csv')
-    df['embedding'] = df['embedding'].apply(eval).apply(np.array)
-    return df
-
-df = load_data()
-
 # Streamlit App
 st.title("Question Answering with OpenAI Embeddings")
 
+# Input for context
+st.write("Paste your text context(s) below. Separate different contexts with a blank line.")
+text_input = st.text_area("Text Contexts", height=200)
+contexts = text_input.split("\n\n")
+
+# Input for the question
 question = st.text_input("Enter your question:")
+
 if st.button("Get Answer"):
-    with st.spinner('Searching for the most relevant context...'):
-        contexts = search_context(df, question, n=1)
-        if contexts:
+    if contexts and question:
+        with st.spinner('Searching for the most relevant context...'):
+            best_context = search_context(contexts, question)
             with st.spinner('Generating the answer...'):
-                answer = generate_answer(contexts[0], question)
+                answer = generate_answer(best_context, question)
                 st.write("Answer:", answer)
-        else:
-            st.write("No relevant context found. Please try again with a different question.")
+    else:
+        st.write("Please provide both contexts and a question.")
