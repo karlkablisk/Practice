@@ -13,8 +13,12 @@ def get_text_chunks(text, verbose=True):
     pages = re.split(r'\[end of page \d+\]\s*\[start of page \d+\]', text)
     for i, page in enumerate(pages, start=1):
         if page.strip():  # Ensure non-empty
+            # Remove any remaining start/end markers
+            cleaned_text = re.sub(r'\[start of page \d+\]', '', page).strip()
+            cleaned_text = re.sub(r'\[end of page \d+\]', '', cleaned_text).strip()
+
             chunks_with_metadata.append({
-                'text': page.strip(),
+                'text': cleaned_text,
                 'metadata': {'page_number': str(i)}
             })
 
