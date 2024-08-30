@@ -79,4 +79,3 @@ st.text_area("Example Text", example_text, height=200)
 if st.button("Chunk and Convert to JSON"):
     json_output = get_text_chunks(example_text)
     st.json(json_output)
-
