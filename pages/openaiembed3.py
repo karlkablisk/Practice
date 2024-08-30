@@ -3,18 +3,16 @@ import openai
 import streamlit as st
 import numpy as np
 from scipy.spatial.distance import cosine
-
-# Initialize OpenAI client
-openai.api_key = os.getenv("OPENAI_API_KEY")
+from openai import OpenAI
 
 class OpenAIStreamlitApp:
     def __init__(self):
-        # Initialize OpenAI client
-        self.client = openai
+        # Initialize the OpenAI client with the API key from the environment variable
+        self.client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
     def get_embedding(self, text, model="text-embedding-3-small"):
         """Generate an embedding for the input text."""
-        response = self.client.embeddings.create(
+        response = openai.embeddings.create(
             input=[text],
             model=model
         )
@@ -30,6 +28,15 @@ class OpenAIStreamlitApp:
         top_index = np.argmax(similarities)
         return contexts[top_index]
 
+    def generate_text(self, prompt, model="gpt-4o-mini"):
+        """Uses the specified GPT model to generate a response based on the input prompt."""
+        response = self.client.chat.completions.create(
+            model=model,
+            messages=[{"role": "user", "content": prompt}],
+            max_tokens=150
+        )
+        return response.choices[0].message['content']
+
     def generate_answer(self, context, question, model="gpt-4o-mini"):
         """Generate an answer using the most relevant context."""
         prompt = f"""Use the below context to answer the question. If the answer cannot be found, write 'I don't know.'
@@ -39,16 +46,7 @@ class OpenAIStreamlitApp:
 
         Question: {question}
         """
-        response = self.client.ChatCompletion.create(
-            model=model,
-            messages=[
-                {"role": "system", "content": "You are a helpful assistant."},
-                {"role": "user", "content": prompt}
-            ],
-            max_tokens=150,
-            temperature=0
-        )
-        return response.choices[0].message['content']
+        return self.generate_text(prompt, model=model)
 
     def run(self):
         st.title("Question Answering with OpenAI Embeddings")
