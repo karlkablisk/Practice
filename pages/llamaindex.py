@@ -1,7 +1,7 @@
 import streamlit as st
 import openai
 from llama_index.core import VectorStoreIndex, SimpleDirectoryReader, Settings
-from llama_index.llms import OpenAI as LlamaOpenAI
+from llama_index.llms.openai import OpenAI  # Updated import path
 
 st.set_page_config(page_title="Chat with the Streamlit docs, powered by LlamaIndex", page_icon="🦙", layout="centered", initial_sidebar_state="auto", menu_items=None)
 openai.api_key = st.secrets["openai_key"]
@@ -20,7 +20,7 @@ if "messages" not in st.session_state.keys():  # Initialize the chat messages hi
 def load_data():
     reader = SimpleDirectoryReader(input_dir="./data", recursive=True)
     docs = reader.load_data()
-    Settings.llm = LlamaOpenAI(
+    Settings.llm = OpenAI(
         model="gpt-3.5-turbo",
         temperature=0.2,
         system_prompt="""You are an expert on 
