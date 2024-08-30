@@ -46,3 +46,4 @@ pandas
 protobuf==3.20.1
 opentelemetry-api==1.15.0
 opentelemetry-sdk==1.15.0
+llama_index
