@@ -36,7 +36,7 @@ class OpenAIStreamlitApp:
         response = self.client.chat.completions.create(
             model=model,
             messages=[{"role": "user", "content": prompt}],
-            max_tokens=150
+            max_tokens=4000
         )
         # Access the content directly from the message object
         return response.choices[0].message.content
