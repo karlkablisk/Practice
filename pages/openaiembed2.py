@@ -6,8 +6,11 @@ from langchain.embeddings import OpenAIEmbeddings
 from langchain.vectorstores import Chroma
 from langchain.chains import RetrievalQA
 
-# Initialize OpenAI client with API key from environment variable
-client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
+# Load OpenAI API key from environment variable and initialize OpenAI client
+openai_api_key = os.getenv("OPENAI_API_KEY")
+if not openai_api_key:
+    st.error("OpenAI API key not found. Please set it in your environment variables.")
+client = OpenAI(api_key=openai_api_key)
 
 def generate_response(uploaded_file, query_text):
     # Load document if file is uploaded
@@ -17,7 +20,7 @@ def generate_response(uploaded_file, query_text):
         text_splitter = CharacterTextSplitter(chunk_size=1000, chunk_overlap=0)
         texts = text_splitter.create_documents(documents)
         # Select embeddings
-        embeddings = OpenAIEmbeddings(openai_api_key=os.getenv("OPENAI_API_KEY"))
+        embeddings = OpenAIEmbeddings(openai_api_key=openai_api_key)
         # Create a vectorstore from documents
         db = Chroma.from_documents(texts, embeddings)
         # Create retriever interface
@@ -38,13 +41,11 @@ query_text = st.text_input('Enter your question:', placeholder='Please provide a
 # Form input and query
 result = []
 with st.form('myform', clear_on_submit=True):
-    openai_api_key = st.text_input('OpenAI API Key', type='password', disabled=not (uploaded_file and query_text))
     submitted = st.form_submit_button('Submit', disabled=not(uploaded_file and query_text))
-    if submitted and openai_api_key.startswith('sk-'):
+    if submitted and openai_api_key:
         with st.spinner('Calculating...'):
             response = generate_response(uploaded_file, query_text)
             result.append(response)
-            del openai_api_key
 
 if len(result):
     st.info(response)
