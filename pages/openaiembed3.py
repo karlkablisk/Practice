@@ -9,6 +9,7 @@ class OpenAIStreamlitApp:
     def __init__(self):
         # Initialize the OpenAI client with the API key from the environment variable
         self.client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
+        self.verbose = False  # Set verbose mode off by default
 
     def get_embedding(self, text, model="text-embedding-3-small"):
         """Generate an embedding for the input text."""
@@ -16,10 +17,7 @@ class OpenAIStreamlitApp:
             input=[text],
             model=model
         )
-        embedding = response.data[0].embedding
-        # Output embedding summary
-        st.write(f"Embedding summary: Length = {len(embedding)}, First 5 values = {embedding[:5]}")
-        return embedding
+        return response.data[0].embedding
 
     def search_context(self, contexts, query, model="text-embedding-3-small"):
         """Search the most relevant context based on the cosine similarity of embeddings."""
@@ -40,18 +38,18 @@ class OpenAIStreamlitApp:
                 max_tokens=150
             )
             
-            # Correctly extract the message content from the response
+            # Extract and return the message content
             if response and "choices" in response and len(response.choices) > 0:
                 return response.choices[0].message.content
             else:
-                error_details = f"Response: {response}\n"
-                return f"Error: The response structure is not as expected. {error_details}"
+                if self.verbose:
+                    error_details = f"Response: {response}\n"
+                    return f"Error: The response structure is not as expected. {error_details}"
+                return "Error: The response structure is not as expected."
 
         except openai.error.OpenAIError as e:
-            # Catch and return any OpenAI API errors
             return f"OpenAI API Error: {str(e)}"
         except Exception as e:
-            # Catch and return any other unexpected errors
             return f"Unexpected Error: {str(e)}"
 
     def generate_answer(self, context, question, model="gpt-4o-mini"):
