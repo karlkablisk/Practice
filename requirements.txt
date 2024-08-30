@@ -28,7 +28,10 @@ langchain_openai
 faiss-cpu
 #==1.7.4
 #fastembed
+
+#llama index
 llama-index
+llama-index-readers-file
 
 
 #??
