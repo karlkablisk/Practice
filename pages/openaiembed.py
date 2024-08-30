@@ -56,9 +56,18 @@ def get_embeddings(text_chunks):
     for item in text_chunks:
         for text in item['text_chunks']:
             text = text.replace("\n", " ")
-            response = client.embeddings.create(input=[text], model="text-embedding-3-small")
-            embeddings.append(response['data'][0]['embedding'])
+            try:
+                response = client.embeddings.create(input=[text], model="text-embedding-3-small")
+                if 'data' in response and response['data']:
+                    embeddings.append(response['data'][0]['embedding'])
+                else:
+                    st.error(f"Failed to retrieve embeddings for text: {text}")
+                    st.write(f"Received response: {response}")
+            except Exception as e:
+                st.error(f"An error occurred while retrieving embeddings: {str(e)}")
+                st.write(f"Failed text: {text}")
     return embeddings
+
 
 # Streamlit interface
 st.title("Text Processing and Embedding with OpenAI")
