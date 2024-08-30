@@ -3,7 +3,7 @@ import openai
 import streamlit as st
 import pandas as pd
 import numpy as np
-from openai.embeddings_utils import cosine_similarity
+from scipy.spatial.distance import cosine
 
 # Initialize OpenAI client
 openai.api_key = os.getenv("OPENAI_API_KEY")
@@ -16,7 +16,7 @@ def get_embedding(text, model="text-embedding-3-small"):
 # Function to search for the most relevant context
 def search_context(df, query, n=3):
     query_embedding = get_embedding(query, model='text-embedding-3-small')
-    df['similarities'] = df.embedding.apply(lambda x: cosine_similarity(np.array(x), query_embedding))
+    df['similarities'] = df.embedding.apply(lambda x: 1 - cosine(np.array(x), np.array(query_embedding)))
     top_contexts = df.sort_values('similarities', ascending=False).head(n)
     return top_contexts['context'].values
 
@@ -38,7 +38,7 @@ def generate_answer(context, question):
     return response.choices[0].text.strip()
 
 # Load data
-@st.cache
+@st.cache_data
 def load_data():
     df = pd.read_csv('context_data.csv')
     df['embedding'] = df['embedding'].apply(eval).apply(np.array)
@@ -59,4 +59,3 @@ if st.button("Get Answer"):
                 st.write("Answer:", answer)
         else:
             st.write("No relevant context found. Please try again with a different question.")
-
