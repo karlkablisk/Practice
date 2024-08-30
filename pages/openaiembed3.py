@@ -42,7 +42,6 @@ class OpenAIStreamlitApp:
             
             # Extract and return the message content
             if response and "choices" in response and len(response.choices) > 0:
-                # Extract the content
                 message_content = response.choices[0].message.content
                 # Display detailed response info in a warning
                 st.warning(f"Response Details:\n{response}")
