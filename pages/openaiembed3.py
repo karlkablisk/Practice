@@ -18,7 +18,7 @@ class OpenAIStreamlitApp:
         )
         embedding = response.data[0].embedding
         # Output embedding summary
-        st.write(f"Embedding summary: Length = {len(embedding)}, First 5 values = {embedding[:5]}")
+        #st.write(f"Embedding summary: Length = {len(embedding)}, First 5 values = {embedding[:5]}")
         return embedding
 
     def search_context(self, contexts, query, model="text-embedding-3-small"):
