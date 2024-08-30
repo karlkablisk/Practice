@@ -30,16 +30,26 @@ class OpenAIStreamlitApp:
 
     def generate_text(self, prompt, model="gpt-4o-mini"):
         """Uses the specified GPT model to generate a response based on the input prompt."""
-        response = self.client.chat.completions.create(
-            model=model,
-            messages=[{"role": "user", "content": prompt}],
-            max_tokens=150
-        )
-        # Handle the response and potential errors
-        if response and "choices" in response and len(response.choices) > 0:
-            return response.choices[0].message.get('content', "No content available in the response.")
-        else:
-            return "Error: The response structure is not as expected."
+        try:
+            response = self.client.chat.completions.create(
+                model=model,
+                messages=[{"role": "user", "content": prompt}],
+                max_tokens=150
+            )
+            
+            # Handle the response and potential errors
+            if response and "choices" in response and len(response.choices) > 0:
+                return response.choices[0].message.get('content', "No content available in the response.")
+            else:
+                error_details = f"Response: {response}\n"
+                return f"Error: The response structure is not as expected. {error_details}"
+
+        except openai.error.OpenAIError as e:
+            # Catch and return any OpenAI API errors
+            return f"OpenAI API Error: {str(e)}"
+        except Exception as e:
+            # Catch and return any other unexpected errors
+            return f"Unexpected Error: {str(e)}"
 
     def generate_answer(self, context, question, model="gpt-4o-mini"):
         """Generate an answer using the most relevant context."""
