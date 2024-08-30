@@ -1,10 +1,20 @@
 import streamlit as st
 import openai
 from llama_index.core import VectorStoreIndex, SimpleDirectoryReader, Settings
-from llama_index.llms.openai import OpenAI  # Updated import path
+from llama_index.llms.openai import OpenAI
+import os
+from dotenv import load_dotenv
+
+# Initialize the OpenAI client with the API key from the environment variable
+load_dotenv()
+openai_api_key = os.getenv("OPENAI_API_KEY")
+if openai_api_key:
+    openai.api_key = openai_api_key
+else:
+    st.error("API key not found. Please set your OPENAI_API_KEY environment variable.")
 
 st.set_page_config(page_title="Chat with the Streamlit docs, powered by LlamaIndex", page_icon="🦙", layout="centered", initial_sidebar_state="auto", menu_items=None)
-openai.api_key = st.secrets["openai_key"]
+
 st.title("Chat with the Streamlit docs, powered by LlamaIndex 💬🦙")
 st.info("Check out the full tutorial to build this app in our [blog post](https://blog.streamlit.io/build-a-chatbot-with-custom-data-sources-powered-by-llamaindex/)", icon="📃")
 
@@ -21,7 +31,7 @@ def load_data():
     reader = SimpleDirectoryReader(input_dir="./data", recursive=True)
     docs = reader.load_data()
     Settings.llm = OpenAI(
-        model="gpt-3.5-turbo",
+        model="gpt-4o-mini",
         temperature=0.2,
         system_prompt="""You are an expert on 
         the Streamlit Python library and your 
