@@ -33,32 +33,12 @@ class OpenAIStreamlitApp:
 
     def generate_text(self, prompt, model="gpt-4o-mini"):
         """Uses the specified GPT model to generate a response based on the input prompt."""
-        try:
-            response = self.client.chat.completions.create(
-                model=model,
-                messages=[{"role": "user", "content": prompt}],
-                max_tokens=150
-            )
-            
-            # Extract and return the message content
-            if response and "choices" in response and len(response.choices) > 0:
-                message_content = response.choices[0].message.content
-                # Display detailed response info in a warning
-                st.warning(f"Response Details:\n{response}")
-                return message_content
-            else:
-                error_details = f"Response: {response}\n"
-                st.warning(error_details)
-                return "Error: The response structure is not as expected."
-
-        except openai.error.OpenAIError as e:
-            # Catch and return any OpenAI API errors
-            st.warning(f"OpenAI API Error: {str(e)}")
-            return f"OpenAI API Error: {str(e)}"
-        except Exception as e:
-            # Catch and return any other unexpected errors
-            st.warning(f"Unexpected Error: {str(e)}")
-            return f"Unexpected Error: {str(e)}"
+        response = self.client.chat.completions.create(
+            model=model,
+            messages=[{"role": "user", "content": prompt}],
+            max_tokens=150
+        )
+        return response.choices[0].message['content']
 
     def generate_answer(self, context, question, model="gpt-4o-mini"):
         """Generate an answer using the most relevant context."""
@@ -87,8 +67,11 @@ class OpenAIStreamlitApp:
                 with st.spinner('Searching for the most relevant context...'):
                     best_context = self.search_context(contexts, question)
                     with st.spinner('Generating the answer...'):
-                        answer = self.generate_answer(best_context, question)
-                        st.write("Answer:", answer)
+                        try:
+                            answer = self.generate_answer(best_context, question)
+                            st.write("Answer:", answer)
+                        except Exception as e:
+                            st.error(f"Error generating answer: {e}")
             else:
                 st.write("Please provide both contexts and a question.")
 
