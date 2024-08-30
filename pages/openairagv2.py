@@ -1,7 +1,7 @@
 import os
 import streamlit as st
 from openai import OpenAI
-from llama_index import VectorStoreIndex, Document
+from llama_index import VectorStoreIndex, Document, SimpleDirectoryReader, ServiceContext
 from PyPDF2 import PdfReader
 from dotenv import load_dotenv
 
@@ -31,7 +31,10 @@ class OpenAIRAGApp:
 
     def perform_rag(self, documents, query, model):
         """Perform RAG using the loaded documents and the query."""
-        index = VectorStoreIndex.from_documents(documents)
+        # Initialize ServiceContext if needed
+        service_context = ServiceContext.from_defaults()
+
+        index = VectorStoreIndex.from_documents(documents, service_context=service_context)
         query_engine = index.as_query_engine()
         response = query_engine.query(query)
         return response
