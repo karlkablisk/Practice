@@ -1,90 +1,96 @@
 import streamlit as st
-import re
-import json
-from openai import OpenAI
-import os
+from langchain_community.chat_message_histories import StreamlitChatMessageHistory
+from langchain_community.embeddings import OpenAIEmbeddings
 
-# Initialize OpenAI client
-client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
+from ensemble import ensemble_retriever_from_docs
+from full_chain import create_full_chain, ask_question
+from local_loader import load_txt_files
 
-class CharacterTextSplitter:
-    def __init__(self, separator="\n", chunk_size=500, chunk_overlap=100, length_function=len):
-        self.separator = separator
-        self.chunk_size = chunk_size
-        self.chunk_overlap = chunk_overlap
-        self.length_function = length_function
+st.set_page_config(page_title="LangChain & Streamlit RAG")
+st.title("LangChain & Streamlit RAG")
 
-    def split_text(self, text):
-        chunks = []
-        start = 0
-        while start < len(text):
-            end = start + self.chunk_size
-            chunk = text[start:end]
-            chunks.append(chunk)
-            start += self.chunk_size - self.chunk_overlap
-        return chunks
 
-def get_text_chunks_grouped_by_page(text, verbose=True):
-    if verbose:
-        st.warning(f"Debug: The type of the input is {type(text)}")
-        st.warning(f"Debug: The first 100 characters of the input are: {text[:100]}")
+def show_ui(qa, prompt_to_user="How may I help you?"):
+    if "messages" not in st.session_state.keys():
+        st.session_state.messages = [{"role": "assistant", "content": prompt_to_user}]
 
-    grouped_chunks = []
-    text_splitter = CharacterTextSplitter()
+    # Display chat messages
+    for message in st.session_state.messages:
+        with st.chat_message(message["role"]):
+            st.write(message["content"])
 
-    # Split by page markers and ensure valid text processing
-    pages = re.split(r'\[end of page \d+\]\s*\[start of page \d+\]', text)
-    for i, page in enumerate(pages, start=1):
-        if page.strip():  # Ensure non-empty
-            cleaned_text = re.sub(r'\[start of page \d+\]', '', page).strip()
-            cleaned_text = re.sub(r'\[end of page \d+\]', '', cleaned_text).strip()
-            chunks = text_splitter.split_text(cleaned_text)
+    # User-provided prompt
+    if prompt := st.chat_input():
+        st.session_state.messages.append({"role": "user", "content": prompt})
+        with st.chat_message("user"):
+            st.write(prompt)
 
-            if chunks:
-                grouped_chunks.append({
-                    'metadata': {'page_number': str(i)},
-                    'text_chunks': [chunk.strip() for chunk in chunks if chunk.strip()]
-                })
+    # Generate a new response if last message is not from assistant
+    if st.session_state.messages[-1]["role"] != "assistant":
+        with st.chat_message("assistant"):
+            with st.spinner("Thinking..."):
+                response = ask_question(qa, prompt)
+                st.markdown(response.content)
+        message = {"role": "assistant", "content": response.content}
+        st.session_state.messages.append(message)
 
-    if verbose:
-        st.warning(f"JSON output created with {len(grouped_chunks)} entries.")
-    return grouped_chunks
 
-def get_embeddings(text_chunks):
-    embeddings = []
-    for item in text_chunks:
-        for text in item['text_chunks']:
-            text = text.replace("\n", " ")
-            try:
-                response = client.embeddings.create(input=[text], model="text-embedding-3-small")
-                if 'data' in response and response['data']:
-                    embeddings.append(response['data'][0]['embedding'])
-                else:
-                    st.error(f"Failed to retrieve embeddings for text: {text}")
-                    st.write(f"Received response: {response}")
-            except Exception as e:
-                st.error(f"An error occurred while retrieving embeddings: {str(e)}")
-                st.write(f"Failed text: {text}")
-    return embeddings
+@st.cache_resource
+def get_retriever(openai_api_key=None):
+    docs = load_txt_files()
+    embeddings = OpenAIEmbeddings(openai_api_key=openai_api_key, model="text-embedding-3-small")
+    return ensemble_retriever_from_docs(docs, embeddings=embeddings)
 
-# Streamlit interface
-st.title("Text Processing and Embedding with OpenAI")
 
-example_text = st.text_area("Input Text", height=200, value="Your example text goes here.")
+def get_chain(openai_api_key=None, huggingfacehub_api_token=None):
+    ensemble_retriever = get_retriever(openai_api_key=openai_api_key)
+    chain = create_full_chain(ensemble_retriever,
+                              openai_api_key=openai_api_key,
+                              chat_memory=StreamlitChatMessageHistory(key="langchain_messages"))
+    return chain
 
-chunked_data = None
 
-if example_text:
-    chunked_data = get_text_chunks_grouped_by_page(example_text, verbose=False)
-    embeddings = get_embeddings(chunked_data)
-    st.session_state['embeddings'] = embeddings
-    st.success("Embeddings generated and stored in session state.")
+def get_secret_or_input(secret_key, secret_name, info_link=None):
+    if secret_key in st.secrets:
+        st.write("Found %s secret" % secret_key)
+        secret_value = st.secrets[secret_key]
+    else:
+        st.write(f"Please provide your {secret_name}")
+        secret_value = st.text_input(secret_name, key=f"input_{secret_key}", type="password")
+        if secret_value:
+            st.session_state[secret_key] = secret_value
+        if info_link:
+            st.markdown(f"[Get an {secret_name}]({info_link})")
+    return secret_value
 
-query = st.chat_input("Enter your query:")
-if query and 'embeddings' in st.session_state:
-    # Placeholder for querying the embeddings
-    st.write(f"Processing query: {query}")
-    # Implement actual query processing logic
-else:
-    st.error("Please enter a query and ensure embeddings are generated.")
 
+def run():
+    ready = True
+
+    openai_api_key = st.session_state.get("OPENAI_API_KEY")
+    huggingfacehub_api_token = st.session_state.get("HUGGINGFACEHUB_API_TOKEN")
+
+    with st.sidebar:
+        if not openai_api_key:
+            openai_api_key = get_secret_or_input('OPENAI_API_KEY', "OpenAI API key",
+                                                 info_link="https://platform.openai.com/account/api-keys")
+        if not huggingfacehub_api_token:
+            huggingfacehub_api_token = get_secret_or_input('HUGGINGFACEHUB_API_TOKEN', "HuggingFace Hub API Token",
+                                                           info_link="https://huggingface.co/docs/huggingface_hub/main/en/quick-start#authentication")
+
+    if not openai_api_key:
+        st.warning("Missing OPENAI_API_KEY")
+        ready = False
+    if not huggingfacehub_api_token:
+        st.warning("Missing HUGGINGFACEHUB_API_TOKEN")
+        ready = False
+
+    if ready:
+        chain = get_chain(openai_api_key=openai_api_key, huggingfacehub_api_token=huggingfacehub_api_token)
+        st.subheader("Ask me questions about this week's meal plan")
+        show_ui(chain, "What would you like to know?")
+    else:
+        st.stop()
+
+
+run()
