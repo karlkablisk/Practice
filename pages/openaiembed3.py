@@ -16,7 +16,10 @@ class OpenAIStreamlitApp:
             input=[text],
             model=model
         )
-        return response.data[0].embedding
+        embedding = response.data[0].embedding
+        # Output embedding summary
+        st.write(f"Embedding summary: Length = {len(embedding)}, First 5 values = {embedding[:5]}")
+        return embedding
 
     def search_context(self, contexts, query, model="text-embedding-3-small"):
         """Search the most relevant context based on the cosine similarity of embeddings."""
@@ -37,9 +40,9 @@ class OpenAIStreamlitApp:
                 max_tokens=150
             )
             
-            # Handle the response and potential errors
+            # Correctly extract the message content from the response
             if response and "choices" in response and len(response.choices) > 0:
-                return response.choices[0].message.get('content', "No content available in the response.")
+                return response.choices[0].message.content
             else:
                 error_details = f"Response: {response}\n"
                 return f"Error: The response structure is not as expected. {error_details}"
