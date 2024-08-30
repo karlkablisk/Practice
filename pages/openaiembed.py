@@ -2,7 +2,6 @@ import streamlit as st
 import re
 import json
 from openai import OpenAI
-import numpy as np
 import os
 
 # Initialize OpenAI client
@@ -33,22 +32,18 @@ def get_text_chunks_grouped_by_page(text, verbose=True):
     grouped_chunks = []
     text_splitter = CharacterTextSplitter()
 
-    # Split by page markers and ensure valid text processing
     pages = re.split(r'\[end of page \d+\]\s*\[start of page \d+\]', text)
     for i, page in enumerate(pages, start=1):
-        if page.strip():  # Ensure non-empty
+        if page.strip():
             cleaned_text = re.sub(r'\[start of page \d+\]', '', page).strip()
             cleaned_text = re.sub(r'\[end of page \d+\]', '', cleaned_text).strip()
             chunks = text_splitter.split_text(cleaned_text)
-
             if chunks:
                 grouped_chunks.append({
                     'metadata': {'page_number': str(i)},
                     'text_chunks': [chunk.strip() for chunk in chunks if chunk.strip()]
                 })
 
-    if verbose:
-        st.warning(f"JSON output created with {len(grouped_chunks)} entries.")
     return grouped_chunks
 
 def get_embeddings(text_chunks):
@@ -56,40 +51,29 @@ def get_embeddings(text_chunks):
     for item in text_chunks:
         for text in item['text_chunks']:
             text = text.replace("\n", " ")
-            try:
-                response = client.embeddings.create(input=[text], model="text-embedding-3-small")
-                if 'data' in response and response['data']:
-                    embeddings.append(response['data'][0]['embedding'])
-                else:
-                    st.error(f"Failed to retrieve embeddings for text: {text}")
-                    st.write(f"Received response: {response}")
-            except Exception as e:
-                st.error(f"An error occurred while retrieving embeddings: {str(e)}")
-                st.write(f"Failed text: {text}")
+            response = client.embeddings.create(input=[text], model="text-embedding-3-small")
+            if 'data' in response and response['data']:
+                embeddings.append(response['data'][0]['embedding'])
+            else:
+                st.error(f"Failed to retrieve embeddings for text: {text}")
     return embeddings
 
+# Streamlit interface setup
+st.title("AI Text Processing with OpenAI Embeddings")
 
-# Streamlit interface
-st.title("Text Processing and Embedding with OpenAI")
+# Always visible text input
+input_text = st.text_area("Input Text", height=200, value="Enter your text here...")
 
-example_text = st.text_area("Input Text", height=200, value="Your example text goes here.")
-
-if st.button("Chunk Text"):
-    chunked_data = get_text_chunks_grouped_by_page(example_text)
-    st.json(chunked_data)
-
-if st.button("Generate Embeddings"):
-    chunked_data = get_text_chunks_grouped_by_page(example_text, verbose=False)
-    embeddings = get_embeddings(chunked_data)
-    st.session_state['embeddings'] = embeddings
-    st.success("Embeddings generated and stored in session state.")
-
-if st.button("Query Embeddings"):
-    if 'embeddings' in st.session_state:
-        query = st.text_input("Enter your query:")
-        if query:
-            # Assume a function to handle querying embeddings
-            results = "Query processed."  # Placeholder for actual query handling
-            st.write(results)
+if st.button("Generate Embeddings and Test AI"):
+    chunked_data = get_text_chunks_grouped_by_page(input_text, verbose=True)
+    if chunked_data:
+        embeddings = get_embeddings(chunked_data)
+        if embeddings:
+            st.success("Embeddings generated successfully.")
+            # Example of using embeddings in an AI response (assuming a function that uses these embeddings)
+            st.write("Embeddings:", embeddings)
+        else:
+            st.error("Failed to generate embeddings.")
     else:
-        st.error("Please generate embeddings first.")
+        st.error("Failed to chunk and process the text.")
+
