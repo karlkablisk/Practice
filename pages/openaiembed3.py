@@ -7,20 +7,32 @@ from scipy.spatial.distance import cosine
 # Initialize OpenAI client
 openai.api_key = os.getenv("OPENAI_API_KEY")
 
-# Function to get embeddings
-def get_embedding(text, model="text-embedding-3-small"):
-    text = text.replace("\n", " ")
-    return openai.Embedding.create(input=[text], model=model).data[0].embedding
+# Function to get embeddings using the chat API
+def get_embedding(text, model="gpt-4o-mini"):
+    response = openai.chat_completions.create(
+        model=model,
+        messages=[{"role": "system", "content": "Generate an embedding for the following text."},
+                  {"role": "user", "content": text}],
+        functions=[{
+            "name": "embeddings.create",
+            "description": "Generate embeddings for the provided text.",
+            "parameters": {
+                "model": "text-embedding-3-small",
+                "input": [text]
+            }
+        }]
+    )
+    return response.choices[0].message['function_call']['arguments']['embedding']
 
 # Function to search for the most relevant context
-def search_context(contexts, query):
-    query_embedding = get_embedding(query, model='text-embedding-3-small')
-    similarities = [1 - cosine(np.array(get_embedding(context)), query_embedding) for context in contexts]
+def search_context(contexts, query, model="gpt-4o-mini"):
+    query_embedding = get_embedding(query, model=model)
+    similarities = [1 - cosine(np.array(get_embedding(context, model=model)), np.array(query_embedding)) for context in contexts]
     top_index = np.argmax(similarities)
     return contexts[top_index]
 
 # Function to generate the answer
-def generate_answer(context, question):
+def generate_answer(context, question, model="gpt-4o-mini"):
     prompt = f"""Use the below context to answer the question. If the answer cannot be found, write 'I don't know.'
 
     Context:
@@ -28,13 +40,14 @@ def generate_answer(context, question):
 
     Question: {question}
     """
-    response = openai.Completion.create(
-        model="text-davinci-003",  # Use the appropriate model for completion
-        prompt=prompt,
+    response = openai.chat_completions.create(
+        model=model,
+        messages=[{"role": "system", "content": "You are a helpful assistant."},
+                  {"role": "user", "content": prompt}],
         max_tokens=150,
         temperature=0
     )
-    return response.choices[0].text.strip()
+    return response.choices[0].message['content']
 
 # Streamlit App
 st.title("Question Answering with OpenAI Embeddings")
