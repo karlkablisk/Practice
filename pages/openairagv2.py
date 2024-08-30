@@ -1,7 +1,7 @@
 import os
 import streamlit as st
 from openai import OpenAI
-from llama_index.core import VectorStoreIndex, SimpleDirectoryReader, Document
+from llama_index import VectorStoreIndex, Document
 from PyPDF2 import PdfReader
 from dotenv import load_dotenv
 
@@ -42,23 +42,23 @@ class OpenAIRAGApp:
         # Choose between PDF or text input
         input_type = st.radio("Choose input type:", ("PDF File", "Text Input"))
 
+        documents = None
+
         if input_type == "PDF File":
             uploaded_file = st.file_uploader("Upload a PDF file", type="pdf")
             if uploaded_file is not None:
                 pdf_text = self.load_pdf_text(uploaded_file)
-                documents = [Document(pdf_text)]
+                documents = [Document(text=pdf_text)]
                 st.success("PDF file successfully loaded and processed.")
             else:
-                documents = None
                 st.info("Please upload a PDF file.")
 
         else:
             text_input = st.text_area("Enter your text:")
             if text_input:
-                documents = [Document(text_input)]
+                documents = [Document(text=text_input)]
                 st.success("Text input successfully processed.")
             else:
-                documents = None
                 st.info("Please enter some text.")
 
         query = st.text_input("Enter your question:")
