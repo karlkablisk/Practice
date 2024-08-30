@@ -38,7 +38,8 @@ class OpenAIStreamlitApp:
             messages=[{"role": "user", "content": prompt}],
             max_tokens=150
         )
-        return response.choices[0].message['content']
+        # Access the content directly from the message object
+        return response.choices[0].message.content
 
     def generate_answer(self, context, question, model="gpt-4o-mini"):
         """Generate an answer using the most relevant context."""
