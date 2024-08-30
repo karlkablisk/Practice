@@ -9,7 +9,79 @@ def get_text_chunks(text, verbose=True):
 
     chunks_with_metadata = []
 
+    # Split by page markers and ensure valid text processingimport streamlit as st
+import re
+import json
+
+def get_text_chunks(text, verbose=True):
+    if verbose:
+        st.warning(f"Debug: The type of the input is {type(text)}")
+        st.warning(f"Debug: The first 100 characters of the input are: {text[:100]}")
+
+    chunks_with_metadata = []
+
     # Split by page markers and ensure valid text processing
+    pages = re.split(r'\[end of page \d+\]\s*\[start of page \d+\]', text)
+    for i, page in enumerate(pages, start=1):
+        if page.strip():  # Ensure non-empty
+            # Remove any remaining start/end markers
+            cleaned_text = re.sub(r'\[start of page \d+\]', '', page).strip()
+            cleaned_text = re.sub(r'\[end of page \d+\]', '', cleaned_text).strip()
+
+            # Further chunk the text if it's too long for one chunk
+            text_splitter = CharacterTextSplitter(
+                separator="\n",
+                chunk_size=1000,
+                chunk_overlap=200,
+                length_function=len
+            )
+            chunks = text_splitter.split_text(cleaned_text)
+            for chunk in chunks:
+                if chunk.strip():
+                    chunks_with_metadata.append({
+                        'text': chunk.strip(),
+                        'metadata': {'page_number': str(i)}
+                    })
+
+    # Convert list to JSON
+    json_output = json.dumps(chunks_with_metadata, indent=4)
+
+    if verbose:
+        st.warning(f"JSON output created with {len(chunks_with_metadata)} entries.")
+
+    return json_output
+
+class CharacterTextSplitter:
+    def __init__(self, separator="\n", chunk_size=1000, chunk_overlap=200, length_function=len):
+        self.separator = separator
+        self.chunk_size = chunk_size
+        self.chunk_overlap = chunk_overlap
+        self.length_function = length_function
+
+    def split_text(self, text):
+        chunks = []
+        start = 0
+        while start < len(text):
+            end = start + self.chunk_size
+            chunk = text[start:end]
+            chunks.append(chunk)
+            start += self.chunk_size - self.chunk_overlap
+        return chunks
+
+# Streamlit App
+st.title("Text Chunker and JSON Converter")
+
+# Input text from the text box
+input_text = st.text_area("Enter Text", height=200)
+
+# Chunk the text and output JSON
+if st.button("Chunk and Convert to JSON"):
+    if input_text:
+        json_output = get_text_chunks(input_text)
+        st.json(json_output)
+    else:
+        st.warning("Please enter some text to chunk and convert.")
+
     pages = re.split(r'\[end of page \d+\]\s*\[start of page \d+\]', text)
     for i, page in enumerate(pages, start=1):
         if page.strip():  # Ensure non-empty
