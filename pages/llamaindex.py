@@ -28,7 +28,12 @@ if "messages" not in st.session_state.keys():  # Initialize the chat messages hi
 
 @st.cache_resource(show_spinner=False)
 def load_data():
-    reader = SimpleDirectoryReader(input_dir="./data", recursive=True)
+    input_dir = "../data"  # Adjusted path to point to the root "data" directory
+    if not os.path.exists(input_dir):
+        st.error(f"Directory {input_dir} does not exist. Please create it and add documents.")
+        return None
+    
+    reader = SimpleDirectoryReader(input_dir=input_dir, recursive=True)
     docs = reader.load_data()
     Settings.llm = OpenAI(
         model="gpt-4o-mini",
@@ -45,6 +50,9 @@ def load_data():
     return index
 
 index = load_data()
+
+if index is None:
+    st.stop()
 
 if "chat_engine" not in st.session_state.keys():  # Initialize the chat engine
     st.session_state.chat_engine = index.as_chat_engine(
