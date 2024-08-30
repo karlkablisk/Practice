@@ -35,7 +35,11 @@ class OpenAIStreamlitApp:
             messages=[{"role": "user", "content": prompt}],
             max_tokens=150
         )
-        return response.choices[0].message['content']
+        # Handle the response and potential errors
+        if response and "choices" in response and len(response.choices) > 0:
+            return response.choices[0].message.get('content', "No content available in the response.")
+        else:
+            return "Error: The response structure is not as expected."
 
     def generate_answer(self, context, question, model="gpt-4o-mini"):
         """Generate an answer using the most relevant context."""
