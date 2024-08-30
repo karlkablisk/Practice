@@ -39,7 +39,7 @@ class OpenAIStreamlitApp:
 
         Question: {question}
         """
-        response = self.client.chat_completions.create(
+        response = self.client.ChatCompletion.create(
             model=model,
             messages=[
                 {"role": "system", "content": "You are a helpful assistant."},
