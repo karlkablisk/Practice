@@ -42,14 +42,14 @@ class OpenAIStreamlitApp:
             total_tokens = self.count_tokens(prompt, model=model) + max_tokens
             if total_tokens > 8192:  # Example limit, adjust based on your model
                 raise ValueError(f"Total token count exceeds the model's limit: {total_tokens} tokens")
-
+    
             response = self.client.chat.completions.create(
                 model=model,
                 messages=[{"role": "user", "content": prompt}],
                 max_tokens=max_tokens
             )
             return response.choices[0].message.content
-
+    
         except openai.error.OpenAIError as e:
             st.error(f"OpenAI API Error: {str(e)}")
         except Exception as e:
@@ -68,18 +68,21 @@ class OpenAIStreamlitApp:
 
     def run(self):
         st.title("Question Answering with OpenAI Embeddings")
-
+    
+        model_options = ["gpt-4-turbo", "gpt-4o", "gpt-4o-mini"]
+        selected_model = st.selectbox("Choose GPT Model", model_options, index=2)
+    
         text_input = st.text_area("Text Contexts", height=200)
         contexts = text_input.split("\n\n")
-
+    
         question = st.text_input("Enter your question:")
-
+    
         if st.button("Get Answer"):
             if contexts and question:
                 with st.spinner('Searching for the most relevant context...'):
-                    best_context = self.search_context(contexts, question)
+                    best_context = self.search_context(contexts, question, model=selected_model)
                     with st.spinner('Generating the answer...'):
-                        answer = self.generate_answer(best_context, question)
+                        answer = self.generate_answer(best_context, question, model=selected_model)
                         if answer:
                             st.write("Answer:", answer)
             else:
