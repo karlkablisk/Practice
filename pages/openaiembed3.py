@@ -31,7 +31,7 @@ class OpenAIStreamlitApp:
         top_index = np.argmax(similarities)
         return contexts[top_index]
 
-    def count_tokens(self, text, model="gpt-4o-mini"):
+    def count_tokens(self, text, model="gpt-4o"):
         """Count the number of tokens in the given text."""
         enc = tiktoken.encoding_for_model(model)
         return len(enc.encode(text))
