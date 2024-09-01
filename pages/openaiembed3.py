@@ -3,13 +3,13 @@ import openai
 import streamlit as st
 import numpy as np
 from scipy.spatial.distance import cosine
+from openai import OpenAI
 import tiktoken  # For token count
 
 class OpenAIStreamlitApp:
     def __init__(self):
         # Initialize the OpenAI client with the API key from the environment variable
-        self.client = openai
-        openai.api_key = os.getenv("OPENAI_API_KEY")
+        self.client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
     def get_embedding(self, text, model="text-embedding-3-small"):
         """Generate an embedding for the input text."""
@@ -17,46 +17,15 @@ class OpenAIStreamlitApp:
             input=[text],
             model=model
         )
-        embedding = response['data'][0]['embedding']
+        embedding = response.data[0].embedding
         st.write(f"Embedding summary: Length = {len(embedding)}, First 5 values = {embedding[:5]}")
         return embedding
-
-    def extract_metadata(self, text):
-        """Extract metadata such as parts, chapters, sections, and page numbers from the text."""
-        metadata = {}
-
-        # Example simple extraction logic
-        lines = text.splitlines()
-        for line in lines:
-            if line.startswith("Part "):
-                metadata['part'] = line.strip()
-            elif line.startswith("Chapter "):
-                metadata['chapter'] = line.strip()
-            elif line.startswith("[start of page "):
-                metadata['start_page'] = int(line.split(' ')[3].strip(']'))
-            elif line.startswith("[end of page "):
-                metadata['end_page'] = int(line.split(' ')[3].strip(']'))
-            # Additional metadata extraction logic can go here
-        return metadata
-
-    def process_contexts(self, raw_contexts):
-        """Process and embed each context with associated metadata."""
-        contexts = []
-        for context in raw_contexts:
-            metadata = self.extract_metadata(context)
-            embedding = self.get_embedding(context)
-            contexts.append({
-                "text": context,
-                "embedding": embedding,
-                "metadata": metadata
-            })
-        return contexts
 
     def search_context(self, contexts, query, model="text-embedding-3-small"):
         """Search the most relevant context based on the cosine similarity of embeddings."""
         query_embedding = self.get_embedding(query, model=model)
         similarities = [
-            1 - cosine(np.array(context['embedding']), np.array(query_embedding))
+            1 - cosine(np.array(self.get_embedding(context, model=model)), np.array(query_embedding))
             for context in contexts
         ]
         top_index = np.argmax(similarities)
@@ -74,7 +43,7 @@ class OpenAIStreamlitApp:
             if total_tokens > 8192:  # Example limit, adjust based on your model
                 raise ValueError(f"Total token count exceeds the model's limit: {total_tokens} tokens")
 
-            response = self.client.ChatCompletion.create(
+            response = self.client.chat.completions.create(
                 model=model,
                 messages=[{"role": "user", "content": prompt}],
                 max_tokens=max_tokens
@@ -88,27 +57,20 @@ class OpenAIStreamlitApp:
 
     def generate_answer(self, context, question, model="gpt-4o-mini"):
         """Generate an answer using the most relevant context."""
-        metadata_info = " ".join([f"{key}: {value}" for key, value in context['metadata'].items()])
-        prompt = f"""Use the below context and metadata to answer the question. If the answer cannot be found, write 'I don't know.'
-
-        Metadata:
-        {metadata_info}
+        prompt = f"""Use the below context to answer the question. If the answer cannot be found, write 'I don't know.'
 
         Context:
-        {context['text']}
+        {context}
 
         Question: {question}
         """
         return self.generate_text(prompt, model=model)
 
     def run(self):
-        st.title("Question Answering with OpenAI Embeddings and Metadata")
+        st.title("Question Answering with OpenAI Embeddings")
 
         text_input = st.text_area("Text Contexts", height=200)
-        raw_contexts = text_input.split("\n\n")
-
-        # Process and embed each context with metadata
-        contexts = self.process_contexts(raw_contexts)
+        contexts = text_input.split("\n\n")
 
         question = st.text_input("Enter your question:")
 
@@ -117,10 +79,9 @@ class OpenAIStreamlitApp:
                 with st.spinner('Searching for the most relevant context...'):
                     best_context = self.search_context(contexts, question)
                     with st.spinner('Generating the answer...'):
-                        answer = self.generate_answer(best_context['text'], question)
+                        answer = self.generate_answer(best_context, question)
                         if answer:
                             st.write("Answer:", answer)
-                            st.write("Metadata:", best_context['metadata'])
             else:
                 st.write("Please provide both contexts and a question.")
 
