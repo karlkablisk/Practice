@@ -8,16 +8,16 @@ import tiktoken
 class OpenAIStreamlitApp:
     def __init__(self):
         # Initialize the OpenAI client with the API key from the environment variable
-        self.client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
+        openai.api_key = os.getenv("OPENAI_API_KEY")
         self.model_embedding = "text-embedding-3-small"  # Use the small model as requested
 
     def get_embedding(self, text):
         """Generate an embedding for the input text."""
-        response = self.client.embeddings.create(
+        response = openai.Embedding.create(
             input=[text],
             model=self.model_embedding
         )
-        embedding = response.data[0].embedding
+        embedding = response['data'][0]['embedding']
         st.write(f"Embedding summary: Length = {len(embedding)}, First 5 values = {embedding[:5]}")
         return embedding
 
@@ -77,12 +77,12 @@ class OpenAIStreamlitApp:
             if total_tokens > 8192:  # Example limit, adjust based on your model
                 raise ValueError(f"Total token count exceeds the model's limit: {total_tokens} tokens")
 
-            response = self.client.chat.completions.create(
+            response = openai.ChatCompletion.create(
                 model=model,
                 messages=[{"role": "user", "content": prompt}],
                 max_tokens=max_tokens
             )
-            return response.choices[0].message.content
+            return response['choices'][0]['message']['content']
 
         except openai.error.OpenAIError as e:
             st.error(f"OpenAI API Error: {str(e)}")
