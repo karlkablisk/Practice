@@ -36,7 +36,7 @@ class OpenAIStreamlitApp:
         enc = tiktoken.encoding_for_model(model)
         return len(enc.encode(text))
 
-    def generate_text(self, prompt, model, max_tokens=1500):
+    def generate_text(self, prompt, model="gpt-4o-mini", max_tokens=1500):
         """Uses the specified GPT model to generate a response based on the input prompt."""
         try:
             total_tokens = self.count_tokens(prompt, model=model) + max_tokens
@@ -55,7 +55,7 @@ class OpenAIStreamlitApp:
         except Exception as e:
             st.error(f"Error generating text: {str(e)}")
 
-    def generate_answer(self, context, question, model):
+    def generate_answer(self, context, question, model="gpt-4o-mini"):
         """Generate an answer using the most relevant context."""
         prompt = f"""Use the below context to answer the question. If the answer cannot be found, write 'I don't know.'
 
@@ -69,9 +69,6 @@ class OpenAIStreamlitApp:
     def run(self):
         st.title("Question Answering with OpenAI Embeddings")
 
-        # Dropdown to select the GPT model
-        model_selection = st.selectbox("Choose the GPT model:", options=["gpt-4-turbo", "gpt-4o", "gpt-4o-mini"], index=2)
-
         text_input = st.text_area("Text Contexts", height=200)
         contexts = text_input.split("\n\n")
 
@@ -80,9 +77,9 @@ class OpenAIStreamlitApp:
         if st.button("Get Answer"):
             if contexts and question:
                 with st.spinner('Searching for the most relevant context...'):
-                    best_context = self.search_context(contexts, question, model=model_selection)
+                    best_context = self.search_context(contexts, question)
                     with st.spinner('Generating the answer...'):
-                        answer = self.generate_answer(best_context, question, model=model_selection)
+                        answer = self.generate_answer(best_context, question)
                         if answer:
                             st.write("Answer:", answer)
             else:
