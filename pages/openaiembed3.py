@@ -3,19 +3,19 @@ import openai
 import streamlit as st
 import numpy as np
 from scipy.spatial.distance import cosine
-import tiktoken
+import tiktoken  # For token count
 
 class OpenAIStreamlitApp:
     def __init__(self):
         # Initialize the OpenAI client with the API key from the environment variable
+        self.client = openai
         openai.api_key = os.getenv("OPENAI_API_KEY")
-        self.model_embedding = "text-embedding-3-small"  # Use the small model as requested
 
-    def get_embedding(self, text):
+    def get_embedding(self, text, model="text-embedding-3-small"):
         """Generate an embedding for the input text."""
-        response = openai.Embedding.create(
+        response = openai.embeddings.create(
             input=[text],
-            model=self.model_embedding
+            model=model
         )
         embedding = response['data'][0]['embedding']
         st.write(f"Embedding summary: Length = {len(embedding)}, First 5 values = {embedding[:5]}")
@@ -25,7 +25,7 @@ class OpenAIStreamlitApp:
         """Extract metadata such as parts, chapters, sections, and page numbers from the text."""
         metadata = {}
 
-        # Example regex-based extraction for parts, chapters, and pages
+        # Example simple extraction logic
         lines = text.splitlines()
         for line in lines:
             if line.startswith("Part "):
@@ -36,10 +36,7 @@ class OpenAIStreamlitApp:
                 metadata['start_page'] = int(line.split(' ')[3].strip(']'))
             elif line.startswith("[end of page "):
                 metadata['end_page'] = int(line.split(' ')[3].strip(']'))
-            else:
-                # Add other custom metadata extraction logic here
-                pass
-
+            # Additional metadata extraction logic can go here
         return metadata
 
     def process_contexts(self, raw_contexts):
@@ -55,9 +52,9 @@ class OpenAIStreamlitApp:
             })
         return contexts
 
-    def search_context(self, contexts, query):
+    def search_context(self, contexts, query, model="text-embedding-3-small"):
         """Search the most relevant context based on the cosine similarity of embeddings."""
-        query_embedding = self.get_embedding(query)
+        query_embedding = self.get_embedding(query, model=model)
         similarities = [
             1 - cosine(np.array(context['embedding']), np.array(query_embedding))
             for context in contexts
@@ -77,12 +74,12 @@ class OpenAIStreamlitApp:
             if total_tokens > 8192:  # Example limit, adjust based on your model
                 raise ValueError(f"Total token count exceeds the model's limit: {total_tokens} tokens")
 
-            response = openai.ChatCompletion.create(
+            response = self.client.ChatCompletion.create(
                 model=model,
                 messages=[{"role": "user", "content": prompt}],
                 max_tokens=max_tokens
             )
-            return response['choices'][0]['message']['content']
+            return response.choices[0].message.content
 
         except openai.error.OpenAIError as e:
             st.error(f"OpenAI API Error: {str(e)}")
@@ -120,7 +117,7 @@ class OpenAIStreamlitApp:
                 with st.spinner('Searching for the most relevant context...'):
                     best_context = self.search_context(contexts, question)
                     with st.spinner('Generating the answer...'):
-                        answer = self.generate_answer(best_context, question)
+                        answer = self.generate_answer(best_context['text'], question)
                         if answer:
                             st.write("Answer:", answer)
                             st.write("Metadata:", best_context['metadata'])
