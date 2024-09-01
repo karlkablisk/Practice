@@ -69,6 +69,13 @@ class OpenAIStreamlitApp:
     def run(self):
         st.title("Question Answering with OpenAI Embeddings")
 
+        # Add a dropdown to select the GPT model
+        model = st.selectbox(
+            "Select GPT Model:",
+            options=["gpt-4-turbo", "gpt-4o", "gpt-4o-mini"],
+            index=2  # Default to "gpt-4o-mini"
+        )
+
         text_input = st.text_area("Text Contexts", height=200)
         contexts = text_input.split("\n\n")
 
@@ -77,9 +84,9 @@ class OpenAIStreamlitApp:
         if st.button("Get Answer"):
             if contexts and question:
                 with st.spinner('Searching for the most relevant context...'):
-                    best_context = self.search_context(contexts, question)
+                    best_context = self.search_context(contexts, question, model=model)
                     with st.spinner('Generating the answer...'):
-                        answer = self.generate_answer(best_context, question)
+                        answer = self.generate_answer(best_context, question, model=model)
                         if answer:
                             st.write("Answer:", answer)
             else:
