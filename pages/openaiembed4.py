@@ -11,6 +11,7 @@ from langchain.schema import Document
 from uuid import uuid4  # Import uuid4 for generating unique IDs
 from scipy.spatial.distance import cosine  # For cosine similarity
 import tiktoken  # For token count
+import re  # For regular expressions
 
 
 class OpenAIStreamlitApp:
@@ -25,35 +26,31 @@ class OpenAIStreamlitApp:
         pages = self.detect_pages(text)
         metadata = {
             "toc": toc if toc else None,
-            "pages": pages
+            "pages": pages if pages else None
         }
         st.info(f"Metadata created: {metadata}")
         return metadata
 
     def detect_table_of_contents(self, text):
-        """Detect if there's a table of contents and its structure."""
-        toc_start_markers = ["Table of Contents", "Contents", "Chapter"]
+        """Detect and structure the table of contents."""
         toc_lines = []
-        lines = text.split("\n")
+        toc_entries = []
         toc_detected = False
+        toc_start_patterns = [r"(Table of Contents|Contents|Chapter)"]
 
-        for line in lines:
-            if any(marker.lower() in line.lower() for marker in toc_start_markers):
+        for pattern in toc_start_patterns:
+            if re.search(pattern, text, re.IGNORECASE):
                 toc_detected = True
-            if toc_detected:
-                toc_lines.append(line)
-            if toc_detected and line.strip() == "":
-                break  # Assume TOC ends when an empty line is encountered
+                break
 
-        if toc_lines:
-            toc_entries = []
+        if toc_detected:
+            toc_lines = re.findall(r"(\d+\.\d+\s.*\s\d+)", text)
             for line in toc_lines:
-                parts = line.split(" ")
-                if len(parts) > 1:
-                    title = " ".join(parts[:-1])
-                    page = parts[-1]
-                    if page.isdigit():
-                        toc_entries.append({"title": title.strip(), "page": int(page)})
+                parts = re.split(r"\s+", line.strip())
+                title = " ".join(parts[:-1])
+                page = parts[-1]
+                if page.isdigit():
+                    toc_entries.append({"title": title.strip(), "page": int(page)})
             return toc_entries
         return None
 
@@ -65,7 +62,7 @@ class OpenAIStreamlitApp:
         lines = text.split("\n")
         for line in lines:
             if "[start of page" in line:
-                current_page = int(line.split(" ")[-1].strip("]"))
+                current_page = int(re.search(r"\d+", line).group())
                 page_mapping[current_page] = []
             elif "[end of page" in line:
                 current_page = None
