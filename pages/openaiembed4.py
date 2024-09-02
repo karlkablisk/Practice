@@ -7,9 +7,10 @@ from langchain.docstore.in_memory import InMemoryDocstore
 from langchain.vectorstores import FAISS
 from langchain.embeddings.openai import OpenAIEmbeddings
 from langchain.text_splitter import RecursiveCharacterTextSplitter
-from langchain.schema import Document
+from langchain.schema import Document  # Correct import for Document
 import tiktoken  # For token count
 import json
+from uuid import uuid4  # Import uuid4 for generating unique IDs
 
 
 class OpenAIStreamlitApp:
@@ -69,7 +70,7 @@ class OpenAIStreamlitApp:
             docstore=InMemoryDocstore(),
             index_to_docstore_id={},
         )
-        uuids = [str(uuid4()) for _ in range(len(documents))]
+        uuids = [str(uuid4()) for _ in range(len(documents))]  # Generate UUIDs for documents
         vector_store.add_documents(documents=documents, ids=uuids)
         st.warning("Vectorstore created and documents added.")
         return vector_store
