@@ -15,9 +15,8 @@ import tiktoken  # For token count
 
 class OpenAIStreamlitApp:
     def __init__(self):
-        # Initialize the OpenAI client with the API key from the environment variable
+        # Initialize the OpenAI API key
         openai.api_key = os.getenv("OPENAI_API_KEY")
-
         self.embeddings = OpenAIEmbeddings(model="text-embedding-3-small")
 
     def analyze_metadata(self, text):
@@ -102,7 +101,7 @@ class OpenAIStreamlitApp:
             if total_tokens > 8192:  # Example limit, adjust based on your model
                 raise ValueError(f"Total token count exceeds the model's limit: {total_tokens} tokens")
 
-            response = self.client.chat.completions.create(
+            response = openai.ChatCompletion.create(
                 model=model,
                 messages=[{"role": "user", "content": prompt}],
                 max_tokens=max_tokens
