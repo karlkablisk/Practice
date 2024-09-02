@@ -1,11 +1,28 @@
 import os
 import streamlit as st
+import logging
+logging.basicConfig(level=logging.DEBUG)
+logger = logging.getLogger()
+
+
 try:
     from llama_index import VectorStoreIndex
     print("LlamaIndex imported successfully")
 except ImportError as e:
     print("Failed to import LlamaIndex:", e)
     print("Check the installed packages with `pip list` and ensure LlamaIndex is correctly installed.")
+
+try:
+    from llama_index import SimpleDirectoryReader
+    logger.info("SimpleDirectoryReader imported successfully")
+except ImportError as e:
+    logger.error("Failed to import SimpleDirectoryReader:", exc_info=True)
+
+try:
+    from llama_index import ServiceContext
+    logger.info("ServiceContext imported successfully")
+except ImportError as e:
+    logger.error("Failed to import ServiceContext:", exc_info=True)
 
 import openai
 from dotenv import load_dotenv
