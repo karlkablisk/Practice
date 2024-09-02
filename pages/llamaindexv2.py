@@ -1,6 +1,6 @@
 import streamlit as st
 import openai
-from llama_index import VectorStoreIndex, Settings, Document
+from llama_index.core import VectorStoreIndex, Settings, Document
 from llama_index.embeddings.openai import OpenAIEmbedding
 from llama_index.vector_stores import SimpleVectorStore  # Remove this import if it's causing an issue
 from llama_index.llms.openai import OpenAI
