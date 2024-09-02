@@ -6,6 +6,7 @@ from llama_index import (
     StorageContext, 
     ServiceContext,
 )
+from llama_index.llms import OpenAI
 import openai
 from dotenv import load_dotenv
 
