@@ -8,31 +8,30 @@ from langchain.vectorstores import FAISS
 from langchain.embeddings.openai import OpenAIEmbeddings
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 from langchain.schema import Document
-from uuid import uuid4  # Import uuid4 for generating unique IDs
-from scipy.spatial.distance import cosine  # For cosine similarity
-import tiktoken  # For token count
-import re  # For regular expressions
+from uuid import uuid4
+from scipy.spatial.distance import cosine
+import tiktoken
+import re
 
 
 class OpenAIStreamlitApp:
     def __init__(self):
-        # Initialize the OpenAI client with the API key from the environment variable
         self.client = openai.OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
         self.embeddings = OpenAIEmbeddings(model="text-embedding-3-small")
 
-    def analyze_metadata(self, text):
-        """Analyze and create relevant metadata for the given text."""
+    def analyze_metadata(self, text, current_page):
         toc = self.extract_toc(text)
-        pages = self.extract_pages(text)
+        section_info = self.extract_section_info(text)
         metadata = {
-            "toc": toc,
-            "pages": pages
+            "chapter": section_info.get("chapter"),
+            "section": section_info.get("section"),
+            "title": section_info.get("title"),
+            "page": current_page
         }
         st.info(f"Metadata created: {metadata}")
         return metadata
 
     def extract_toc(self, text):
-        """Extract and structure the table of contents."""
         toc_entries = []
         if "[start of toc]" in text.lower() and "[end of toc]" in text.lower():
             toc_text = re.search(r"\[start of toc\](.*?)\[end of toc\]", text, re.DOTALL).group(1)
@@ -49,48 +48,32 @@ class OpenAIStreamlitApp:
             return toc_entries
         return None
 
-    def extract_pages(self, text):
-        """Identify and map page numbers based on [start of page x] and [end of page x] markers."""
-        page_mapping = {}
-        current_page = None
-
-        lines = text.split("\n")
-        page_content = []
-        for line in lines:
-            if "[start of page" in line:
-                if current_page is not None and page_content:
-                    page_mapping[current_page] = " ".join(page_content).strip()
-                current_page = int(re.search(r"\d+", line).group())
-                page_content = []
-            elif "[end of page" in line:
-                if current_page is not None:
-                    page_mapping[current_page] = " ".join(page_content).strip()
-                current_page = None
-            elif current_page is not None:
-                page_content.append(line.strip())
-
-        if current_page is not None and page_content:
-            page_mapping[current_page] = " ".join(page_content).strip()
-
-        st.info(f"Pages detected: {list(page_mapping.keys())}")
-        return page_mapping
+    def extract_section_info(self, text):
+        """Extract section, chapter, and title information from the text."""
+        match = re.search(r"(\d+(\.\d+)*)\s+(.*)", text)
+        if match:
+            section_number = match.group(1)
+            title = match.group(3).strip()
+            chapter_number = section_number.split('.')[0] if '.' in section_number else section_number
+            return {"chapter": chapter_number, "section": section_number, "title": title}
+        return {"chapter": None, "section": None, "title": None}
 
     def chunk_text(self, text):
-        """Chunk the text and create metadata for each chunk."""
         splitter = RecursiveCharacterTextSplitter(chunk_size=1000, chunk_overlap=200)
         chunks = splitter.split_text(text)
 
         documents = []
+        current_page = 1
         for i, chunk in enumerate(chunks):
-            metadata = self.analyze_metadata(chunk)
+            metadata = self.analyze_metadata(chunk, current_page)
             documents.append(Document(page_content=chunk, metadata=metadata))
             st.info(f"Chunk {i + 1}: {chunk}\nMetadata: {metadata}")
+            current_page += chunk.count("[start of page")
 
         st.info(f"Total {len(chunks)} chunks created.")
         return documents
 
     def create_vectorstore(self, documents):
-        """Create a FAISS vectorstore and add documents."""
         sample_embedding = self.embeddings.embed_query("sample text")
         embedding_dim = len(sample_embedding)
         index = faiss.IndexFlatL2(embedding_dim)
@@ -100,23 +83,18 @@ class OpenAIStreamlitApp:
             docstore=InMemoryDocstore(),
             index_to_docstore_id={},
         )
-        uuids = [str(uuid4()) for _ in range(len(documents))]  # Generate UUIDs for documents
+        uuids = [str(uuid4()) for _ in range(len(documents))]
         vector_store.add_documents(documents=documents, ids=uuids)
         st.info("Vectorstore created and documents added.")
         return vector_store
 
     def get_embedding(self, text, model="text-embedding-3-small"):
-        """Generate an embedding for the input text."""
-        response = openai.embeddings.create(
-            input=[text],
-            model=model
-        )
+        response = openai.embeddings.create(input=[text], model=model)
         embedding = response.data[0].embedding
         st.write(f"Embedding summary: Length = {len(embedding)}, First 5 values = {embedding[:5]}")
         return embedding
 
     def search_context(self, contexts, query, model="text-embedding-3-small"):
-        """Search the most relevant context based on the cosine similarity of embeddings."""
         query_embedding = self.get_embedding(query, model=model)
         similarities = [
             1 - cosine(np.array(self.get_embedding(context, model=model)), np.array(query_embedding))
@@ -126,15 +104,13 @@ class OpenAIStreamlitApp:
         return contexts[top_index]
 
     def count_tokens(self, text, model="gpt-4o-mini"):
-        """Count the number of tokens in the given text."""
         enc = tiktoken.encoding_for_model(model)
         return len(enc.encode(text))
 
     def generate_text(self, prompt, model="gpt-4o-mini", max_tokens=1500):
-        """Uses the specified GPT model to generate a response based on the input prompt."""
         try:
             total_tokens = self.count_tokens(prompt, model=model) + max_tokens
-            if total_tokens > 8192:  # Example limit, adjust based on your model
+            if total_tokens > 8192:
                 raise ValueError(f"Total token count exceeds the model's limit: {total_tokens} tokens")
 
             response = self.client.chat.completions.create(
@@ -150,7 +126,6 @@ class OpenAIStreamlitApp:
             st.error(f"Error generating text: {str(e)}")
 
     def generate_answer(self, context, question, model="gpt-4o-mini"):
-        """Generate an answer using the most relevant context."""
         prompt = f"""Use the below context to answer the question. If the answer cannot be found, write 'I don't know.'
 
         Context:
