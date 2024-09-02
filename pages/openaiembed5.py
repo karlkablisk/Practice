@@ -7,8 +7,6 @@ except ImportError as e:
     print("Failed to import LlamaIndex:", e)
     print("Check the installed packages with `pip list` and ensure LlamaIndex is correctly installed.")
 
-
-from llama_index.llms import OpenAI
 import openai
 from dotenv import load_dotenv
 
