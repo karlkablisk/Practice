@@ -7,7 +7,7 @@ from langchain.docstore.in_memory import InMemoryDocstore
 from langchain.vectorstores import FAISS
 from langchain.embeddings.openai import OpenAIEmbeddings
 from langchain.text_splitter import RecursiveCharacterTextSplitter
-from langchain import Document
+from langchain.schema import Document
 import tiktoken  # For token count
 import json
 
