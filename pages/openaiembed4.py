@@ -22,25 +22,20 @@ class OpenAIStreamlitApp:
 
     def analyze_metadata(self, text):
         """Analyze and create relevant metadata for the given text."""
-        toc = self.detect_table_of_contents(text)
-        pages = self.detect_pages(text)
+        toc = self.extract_toc(text)
+        pages = self.extract_pages(text)
         metadata = {
-            "toc": toc if toc else None,
-            "pages": pages if pages else None
+            "toc": toc,
+            "pages": pages
         }
         st.info(f"Metadata created: {metadata}")
         return metadata
 
-    def detect_table_of_contents(self, text):
-        """Detect and structure the table of contents."""
+    def extract_toc(self, text):
+        """Extract and structure the table of contents."""
         toc_entries = []
-        toc_detected = False
-        toc_section = []
-
-        # Identify the start and end of TOC
         if "[start of toc]" in text.lower() and "[end of toc]" in text.lower():
-            toc_detected = True
-            toc_text = text.split("[start of toc]")[1].split("[end of toc]")[0]
+            toc_text = re.search(r"\[start of toc\](.*?)\[end of toc\]", text, re.DOTALL).group(1)
             toc_lines = toc_text.split("\n")
 
             for line in toc_lines:
@@ -51,23 +46,31 @@ class OpenAIStreamlitApp:
                     page = parts[1].strip()
                     if page.isdigit():
                         toc_entries.append({"title": title, "page": int(page)})
+            return toc_entries
+        return None
 
-        return toc_entries if toc_detected else None
-
-    def detect_pages(self, text):
+    def extract_pages(self, text):
         """Identify and map page numbers based on [start of page x] and [end of page x] markers."""
         page_mapping = {}
         current_page = None
 
         lines = text.split("\n")
+        page_content = []
         for line in lines:
             if "[start of page" in line:
+                if current_page is not None and page_content:
+                    page_mapping[current_page] = " ".join(page_content).strip()
                 current_page = int(re.search(r"\d+", line).group())
-                page_mapping[current_page] = []
+                page_content = []
             elif "[end of page" in line:
+                if current_page is not None:
+                    page_mapping[current_page] = " ".join(page_content).strip()
                 current_page = None
-            if current_page is not None:
-                page_mapping[current_page].append(line.strip())
+            elif current_page is not None:
+                page_content.append(line.strip())
+
+        if current_page is not None and page_content:
+            page_mapping[current_page] = " ".join(page_content).strip()
 
         st.info(f"Pages detected: {list(page_mapping.keys())}")
         return page_mapping
