@@ -23,24 +23,37 @@ class OpenAIStreamlitApp:
         """Analyze and create relevant metadata for the given text."""
         metadata = {
             "has_toc": self.detect_table_of_contents(text),
-            "page_count": self.detect_page_count(text),
+            "pages": self.detect_pages(text),
         }
         st.info(f"Metadata created: {metadata}")
         return metadata
 
     def detect_table_of_contents(self, text):
         """Detect if there's a table of contents and its structure."""
-        patterns = ["Table of Contents", "Contents", "Chapter", "Section"]
-        toc_detected = any(pattern.lower() in text.lower() for pattern in patterns)
+        toc_start_markers = ["Table of Contents", "Contents", "Chapter"]
+        toc_detected = any(marker.lower() in text.lower() for marker in toc_start_markers)
         if toc_detected:
             st.info("Table of Contents detected.")
         return toc_detected
 
-    def detect_page_count(self, text):
-        """Estimate the number of pages based on markers."""
-        pages = text.count("[start of page")
-        st.info(f"Estimated page count: {pages}")
-        return pages
+    def detect_pages(self, text):
+        """Identify and map page numbers based on [start of page x] and [end of page x] markers."""
+        page_mapping = {}
+        current_page = None
+
+        lines = text.split("\n")
+        for line in lines:
+            if "[start of page" in line:
+                current_page = int(line.split(" ")[-1].strip("]"))
+            elif "[end of page" in line:
+                current_page = None
+            if current_page is not None:
+                if current_page not in page_mapping:
+                    page_mapping[current_page] = []
+                page_mapping[current_page].append(line)
+
+        st.info(f"Pages detected: {list(page_mapping.keys())}")
+        return page_mapping
 
     def chunk_text(self, text):
         """Chunk the text and create metadata for each chunk."""
