@@ -11,7 +11,7 @@ from langchain.schema import Document
 from uuid import uuid4  # Import uuid4 for generating unique IDs
 from scipy.spatial.distance import cosine  # For cosine similarity
 import tiktoken  # For token count
-
+ 
 
 class OpenAIStreamlitApp:
     def __init__(self):
