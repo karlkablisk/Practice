@@ -19,7 +19,6 @@ class OpenAIStreamlitApp:
         self.embeddings = OpenAIEmbeddings(model="text-embedding-3-small")
 
     def analyze_metadata(self, text, current_page):
-        toc = self.extract_toc(text)
         section_info = self.extract_section_info(text)
         metadata = {
             "chapter": section_info.get("chapter"),
@@ -29,22 +28,6 @@ class OpenAIStreamlitApp:
         }
         st.info(f"Metadata created: {metadata}")
         return metadata
-
-    def extract_toc(self, text):
-        toc_entries = []
-        if "[start of toc]" in text.lower() and "[end of toc]" in text.lower():
-            toc_text = re.search(r"\[start of toc\](.*?)\[end of toc\]", text, re.DOTALL).group(1)
-            toc_lines = toc_text.split("\n")
-            for line in toc_lines:
-                match = re.match(r"(\d+(\.\d+)*\s.*\s\d+)", line)
-                if match:
-                    parts = line.rsplit(" ", 1)
-                    title = parts[0].strip()
-                    page = parts[1].strip()
-                    if page.isdigit():
-                        toc_entries.append({"title": title, "page": int(page)})
-            return toc_entries
-        return None
 
     def extract_section_info(self, text):
         match = re.search(r"(\d+(\.\d+)*)\s+(.*)", text)
@@ -62,13 +45,25 @@ class OpenAIStreamlitApp:
         documents = []
         current_page = 1
         for i, chunk in enumerate(chunks):
+            current_page = self.get_current_page(chunk, current_page)
             metadata = self.analyze_metadata(chunk, current_page)
-            documents.append(Document(page_content=chunk, metadata=metadata))
+            document = Document(page_content=chunk, metadata=metadata)
+            documents.append(document)
             st.info(f"Chunk {i + 1}: {chunk}\nMetadata: {metadata}")
-            current_page += chunk.count("[start of page")
-
-        st.info(f"Total {len(chunks)} chunks created.")
+        
+        st.info(f"Total {len(documents)} documents created.")
         return documents
+
+    def get_current_page(self, chunk, current_page):
+        """Update the current page based on the presence of page markers in the chunk."""
+        start_page_markers = re.findall(r"\[start of page (\d+)\]", chunk)
+        end_page_markers = re.findall(r"\[end of page (\d+)\]", chunk)
+
+        if start_page_markers:
+            current_page = int(start_page_markers[-1])
+        elif end_page_markers:
+            current_page = int(end_page_markers[-1]) + 1
+        return current_page
 
     def create_vectorstore(self, documents):
         sample_embedding = self.embeddings.embed_query("sample text")
@@ -171,7 +166,7 @@ class OpenAIStreamlitApp:
         if st.session_state.documents:
             with st.expander("📄 Show Chunks and Metadata", expanded=True):
                 for i, doc in enumerate(st.session_state.documents):
-                    st.subheader(f"Chunk {i + 1}")
+                    st.subheader(f"Document {i + 1}")
                     st.write(f"**Content:** {doc.page_content}")
                     st.write(f"**Metadata:** {doc.metadata}")
                     st.markdown("---")
