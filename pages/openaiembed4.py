@@ -16,7 +16,8 @@ import tiktoken  # For token count
 class OpenAIStreamlitApp:
     def __init__(self):
         # Initialize the OpenAI client with the API key from the environment variable
-        self.client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
+        openai.api_key = os.getenv("OPENAI_API_KEY")
+
         self.embeddings = OpenAIEmbeddings(model="text-embedding-3-small")
 
     def analyze_metadata(self, text):
