@@ -94,24 +94,14 @@ class OpenAIStreamlitApp:
         enc = tiktoken.encoding_for_model(model)
         return len(enc.encode(text))
 
-    def generate_text(self, prompt, model="gpt-4o-mini", max_tokens=1500):
+    def generate_text(self, prompt, model="gpt-4o-mini", max_tokens=150):
         """Uses the specified GPT model to generate a response based on the input prompt."""
-        try:
-            total_tokens = self.count_tokens(prompt, model=model) + max_tokens
-            if total_tokens > 8192:  # Example limit, adjust based on your model
-                raise ValueError(f"Total token count exceeds the model's limit: {total_tokens} tokens")
-
-            response = openai.ChatCompletion.create(
-                model=model,
-                messages=[{"role": "user", "content": prompt}],
-                max_tokens=max_tokens
-            )
-            return response.choices[0].message.content
-
-        except Exception as e:
-            # Catch any exception and print it
-            st.error(f"Error generating text: {str(e)}")
-            raise e  # Re-raise the exception to see it in the console as well
+        response = openai.ChatCompletion.create(
+            model=model,
+            messages=[{"role": "user", "content": prompt}],
+            max_tokens=max_tokens
+        )
+        return response.choices[0].message['content']
 
     def generate_answer(self, context, question, model="gpt-4o-mini"):
         """Generate an answer using the most relevant context."""
