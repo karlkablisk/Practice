@@ -11,7 +11,7 @@ from langchain.schema import Document
 from uuid import uuid4  # Import uuid4 for generating unique IDs
 from scipy.spatial.distance import cosine  # For cosine similarity
 import tiktoken  # For token count
- 
+
 
 class OpenAIStreamlitApp:
     def __init__(self):
@@ -21,9 +21,11 @@ class OpenAIStreamlitApp:
 
     def analyze_metadata(self, text):
         """Analyze and create relevant metadata for the given text."""
+        toc = self.detect_table_of_contents(text)
+        pages = self.detect_pages(text)
         metadata = {
-            "has_toc": self.detect_table_of_contents(text),
-            "pages": self.detect_pages(text),
+            "toc": toc if toc else None,
+            "pages": pages
         }
         st.info(f"Metadata created: {metadata}")
         return metadata
@@ -31,10 +33,29 @@ class OpenAIStreamlitApp:
     def detect_table_of_contents(self, text):
         """Detect if there's a table of contents and its structure."""
         toc_start_markers = ["Table of Contents", "Contents", "Chapter"]
-        toc_detected = any(marker.lower() in text.lower() for marker in toc_start_markers)
-        if toc_detected:
-            st.info("Table of Contents detected.")
-        return toc_detected
+        toc_lines = []
+        lines = text.split("\n")
+        toc_detected = False
+
+        for line in lines:
+            if any(marker.lower() in line.lower() for marker in toc_start_markers):
+                toc_detected = True
+            if toc_detected:
+                toc_lines.append(line)
+            if toc_detected and line.strip() == "":
+                break  # Assume TOC ends when an empty line is encountered
+
+        if toc_lines:
+            toc_entries = []
+            for line in toc_lines:
+                parts = line.split(" ")
+                if len(parts) > 1:
+                    title = " ".join(parts[:-1])
+                    page = parts[-1]
+                    if page.isdigit():
+                        toc_entries.append({"title": title.strip(), "page": int(page)})
+            return toc_entries
+        return None
 
     def detect_pages(self, text):
         """Identify and map page numbers based on [start of page x] and [end of page x] markers."""
@@ -45,11 +66,10 @@ class OpenAIStreamlitApp:
         for line in lines:
             if "[start of page" in line:
                 current_page = int(line.split(" ")[-1].strip("]"))
+                page_mapping[current_page] = []
             elif "[end of page" in line:
                 current_page = None
             if current_page is not None:
-                if current_page not in page_mapping:
-                    page_mapping[current_page] = []
                 page_mapping[current_page].append(line)
 
         st.info(f"Pages detected: {list(page_mapping.keys())}")
