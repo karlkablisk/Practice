@@ -6,7 +6,7 @@ from llama_index import VectorStoreIndex
 from llama_index import SimpleDirectoryReader
 from llama_index import StorageContext
 from llama_index import ServiceContext
-
+ 
 import openai
 from dotenv import load_dotenv
 
