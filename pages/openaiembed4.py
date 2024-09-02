@@ -1,7 +1,6 @@
 import os
 import streamlit as st
-import openai
-from openai import OpenAIError
+import openai, OpenAIError
 import faiss
 import numpy as np
 from langchain.docstore.in_memory import InMemoryDocstore
