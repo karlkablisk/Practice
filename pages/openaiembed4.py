@@ -13,7 +13,6 @@ from scipy.spatial.distance import cosine
 import tiktoken
 import re
 
-
 class OpenAIStreamlitApp:
     def __init__(self):
         self.client = openai.OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
@@ -36,7 +35,6 @@ class OpenAIStreamlitApp:
         if "[start of toc]" in text.lower() and "[end of toc]" in text.lower():
             toc_text = re.search(r"\[start of toc\](.*?)\[end of toc\]", text, re.DOTALL).group(1)
             toc_lines = toc_text.split("\n")
-
             for line in toc_lines:
                 match = re.match(r"(\d+(\.\d+)*\s.*\s\d+)", line)
                 if match:
@@ -49,7 +47,6 @@ class OpenAIStreamlitApp:
         return None
 
     def extract_section_info(self, text):
-        """Extract section, chapter, and title information from the text."""
         match = re.search(r"(\d+(\.\d+)*)\s+(.*)", text)
         if match:
             section_number = match.group(1)
@@ -94,18 +91,24 @@ class OpenAIStreamlitApp:
         st.write(f"Embedding summary: Length = {len(embedding)}, First 5 values = {embedding[:5]}")
         return embedding
 
-    def search_context(self, contexts, query, model="text-embedding-3-small"):
-        query_embedding = self.get_embedding(query, model=model)
-        similarities = [
-            1 - cosine(np.array(self.get_embedding(context, model=model)), np.array(query_embedding))
-            for context in contexts
-        ]
-        top_index = np.argmax(similarities)
-        return contexts[top_index]
+    def search_context(self, documents, query, model="text-embedding-3-small"):
+        relevant_context = ""
+        for doc in documents:
+            if (query.lower() in doc.metadata.get("chapter", "").lower() or
+                query.lower() in doc.metadata.get("section", "").lower() or
+                query.lower() in doc.metadata.get("title", "").lower()):
+                relevant_context += doc.page_content + "\n"
 
-    def count_tokens(self, text, model="gpt-4o-mini"):
-        enc = tiktoken.encoding_for_model(model)
-        return len(enc.encode(text))
+        if not relevant_context.strip():
+            query_embedding = self.get_embedding(query, model=model)
+            similarities = [
+                1 - cosine(np.array(self.get_embedding(doc.page_content, model=model)), np.array(query_embedding))
+                for doc in documents
+            ]
+            top_index = np.argmax(similarities)
+            return documents[top_index].page_content
+
+        return relevant_context.strip()
 
     def generate_text(self, prompt, model="gpt-4o-mini", max_tokens=1500):
         try:
@@ -126,13 +129,15 @@ class OpenAIStreamlitApp:
             st.error(f"Error generating text: {str(e)}")
 
     def generate_answer(self, context, question, model="gpt-4o-mini"):
-        prompt = f"""Use the below context to answer the question. If the answer cannot be found, write 'I don't know.'
+        prompt = f"""Based on the following context, answer the question as accurately as possible. If the answer isn't directly available, try to infer from the information provided.
 
         Context:
         {context}
 
         Question: {question}
-        """
+
+        Provide the most relevant information available."""
+    
         return self.generate_text(prompt, model=model)
 
     def run(self):
@@ -175,8 +180,7 @@ class OpenAIStreamlitApp:
             query = st.chat_input("💬 Enter your question here:")
             if query:
                 with st.spinner('🔍 Searching for relevant information...'):
-                    contexts = [doc.page_content for doc in st.session_state.documents]
-                    best_context = self.search_context(contexts, query)
+                    best_context = self.search_context(st.session_state.documents, query)
                 with st.spinner('🤖 Generating answer...'):
                     answer = self.generate_answer(best_context, query)
                     if answer:
