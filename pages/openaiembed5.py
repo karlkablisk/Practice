@@ -1,11 +1,13 @@
 import os
 import streamlit as st
-from llama_index import (
-    VectorStoreIndex, 
-    SimpleDirectoryReader, 
-    StorageContext, 
-    ServiceContext,
-)
+try:
+    from llama_index import VectorStoreIndex
+    print("LlamaIndex imported successfully")
+except ImportError as e:
+    print("Failed to import LlamaIndex:", e)
+    print("Check the installed packages with `pip list` and ensure LlamaIndex is correctly installed.")
+
+
 from llama_index.llms import OpenAI
 import openai
 from dotenv import load_dotenv
