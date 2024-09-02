@@ -106,22 +106,16 @@ class OpenAIStreamlitApp:
         return relevant_context.strip()
 
     def generate_text(self, prompt, model="gpt-4o-mini", max_tokens=1500):
-        try:
-            total_tokens = self.count_tokens(prompt, model=model) + max_tokens
-            if total_tokens > 8192:
-                raise ValueError(f"Total token count exceeds the model's limit: {total_tokens} tokens")
+        total_tokens = self.count_tokens(prompt, model=model) + max_tokens
+        if total_tokens > 8192:
+            raise ValueError(f"Total token count exceeds the model's limit: {total_tokens} tokens")
 
-            response = self.client.chat.completions.create(
-                model=model,
-                messages=[{"role": "user", "content": prompt}],
-                max_tokens=max_tokens
-            )
-            return response.choices[0].message.content
-
-        except openai.error.OpenAIError as e:
-            st.error(f"OpenAI API Error: {str(e)}")
-        except Exception as e:
-            st.error(f"Error generating text: {str(e)}")
+        response = self.client.chat.completions.create(
+            model=model,
+            messages=[{"role": "user", "content": prompt}],
+            max_tokens=max_tokens
+        )
+        return response.choices[0].message.content
 
     def generate_answer(self, context, question, model="gpt-4o-mini"):
         prompt = f"""Based on the following context, answer the question as accurately as possible. If the answer isn't directly available, try to infer from the information provided.
