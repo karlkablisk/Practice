@@ -21,9 +21,9 @@ class OpenAIStreamlitApp:
     def analyze_metadata(self, text, current_page):
         section_info = self.extract_section_info(text)
         metadata = {
-            "chapter": section_info.get("chapter"),
-            "section": section_info.get("section"),
-            "title": section_info.get("title"),
+            "chapter": section_info.get("chapter", "Unknown"),
+            "section": section_info.get("section", "Unknown"),
+            "title": section_info.get("title", "Untitled"),
             "page": current_page
         }
         st.info(f"Metadata created: {metadata}")
@@ -89,9 +89,9 @@ class OpenAIStreamlitApp:
     def search_context(self, documents, query, model="text-embedding-3-small"):
         relevant_context = ""
         for doc in documents:
-            if (query.lower() in doc.metadata.get("chapter", "").lower() or
-                query.lower() in doc.metadata.get("section", "").lower() or
-                query.lower() in doc.metadata.get("title", "").lower()):
+            if (query.lower() in (doc.metadata.get("chapter") or "").lower() or
+                query.lower() in (doc.metadata.get("section") or "").lower() or
+                query.lower() in (doc.metadata.get("title") or "").lower()):
                 relevant_context += doc.page_content + "\n"
 
         if not relevant_context.strip():
