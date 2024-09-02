@@ -15,7 +15,7 @@ import tiktoken  # For token count
 
 class OpenAIStreamlitApp:
     def __init__(self):
-        # Initialize the OpenAI API key
+        # Set up OpenAI API key
         openai.api_key = os.getenv("OPENAI_API_KEY")
         self.embeddings = OpenAIEmbeddings(model="text-embedding-3-small")
 
@@ -74,7 +74,7 @@ class OpenAIStreamlitApp:
 
     def get_embedding(self, text, model="text-embedding-3-small"):
         """Generate an embedding for the input text."""
-        response = openai.embeddings.create(input=[text], model=model)
+        response = openai.Embedding.create(input=[text], model=model)
         embedding = response.data[0].embedding
         st.write(f"Embedding summary: Length = {len(embedding)}, First 5 values = {embedding[:5]}")
         return embedding
