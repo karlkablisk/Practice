@@ -1,6 +1,6 @@
 import os
 import streamlit as st
-import openai, OpenAIError
+import openai
 import faiss
 import numpy as np
 from langchain.docstore.in_memory import InMemoryDocstore
@@ -108,10 +108,10 @@ class OpenAIStreamlitApp:
             )
             return response.choices[0].message.content
 
-        except openai.error.OpenAIError as e:
-            st.error(f"OpenAI API Error: {str(e)}")
         except Exception as e:
+            # Catch any exception and print it
             st.error(f"Error generating text: {str(e)}")
+            raise e  # Re-raise the exception to see it in the console as well
 
     def generate_answer(self, context, question, model="gpt-4o-mini"):
         """Generate an answer using the most relevant context."""
