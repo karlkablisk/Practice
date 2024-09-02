@@ -33,26 +33,26 @@ class OpenAIStreamlitApp:
 
     def detect_table_of_contents(self, text):
         """Detect and structure the table of contents."""
-        toc_lines = []
         toc_entries = []
         toc_detected = False
-        toc_start_patterns = [r"(Table of Contents|Contents|Chapter)"]
+        toc_section = []
 
-        for pattern in toc_start_patterns:
-            if re.search(pattern, text, re.IGNORECASE):
-                toc_detected = True
-                break
+        # Identify the start and end of TOC
+        if "[start of toc]" in text.lower() and "[end of toc]" in text.lower():
+            toc_detected = True
+            toc_text = text.split("[start of toc]")[1].split("[end of toc]")[0]
+            toc_lines = toc_text.split("\n")
 
-        if toc_detected:
-            toc_lines = re.findall(r"(\d+\.\d+\s.*\s\d+)", text)
             for line in toc_lines:
-                parts = re.split(r"\s+", line.strip())
-                title = " ".join(parts[:-1])
-                page = parts[-1]
-                if page.isdigit():
-                    toc_entries.append({"title": title.strip(), "page": int(page)})
-            return toc_entries
-        return None
+                match = re.match(r"(\d+(\.\d+)*\s.*\s\d+)", line)
+                if match:
+                    parts = line.rsplit(" ", 1)
+                    title = parts[0].strip()
+                    page = parts[1].strip()
+                    if page.isdigit():
+                        toc_entries.append({"title": title, "page": int(page)})
+
+        return toc_entries if toc_detected else None
 
     def detect_pages(self, text):
         """Identify and map page numbers based on [start of page x] and [end of page x] markers."""
@@ -67,7 +67,7 @@ class OpenAIStreamlitApp:
             elif "[end of page" in line:
                 current_page = None
             if current_page is not None:
-                page_mapping[current_page].append(line)
+                page_mapping[current_page].append(line.strip())
 
         st.info(f"Pages detected: {list(page_mapping.keys())}")
         return page_mapping
