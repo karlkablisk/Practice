@@ -1,8 +1,8 @@
 import streamlit as st
 import openai
-from llama_index.core import VectorStoreIndex, Settings, Document
+from llama_index import VectorStoreIndex, Settings, Document
 from llama_index.embeddings.openai import OpenAIEmbedding
-from llama_index.vector_stores import SimpleVectorStore
+from llama_index.vector_stores import SimpleVectorStore  # Remove this import if it's causing an issue
 from llama_index.llms.openai import OpenAI
 import os
 from dotenv import load_dotenv
@@ -36,11 +36,8 @@ def create_index_from_text(pasted_text):
     # Convert the pasted text into a Document format required by LlamaIndex
     document = Document(text=pasted_text)
     
-    # Create a vector store using the specified embedding model
-    vector_store = SimpleVectorStore(embedding_model=embedding_model)
-    
-    # Create a vector store index from the document
-    index = VectorStoreIndex.from_documents([document], vector_store=vector_store)
+    # Create a vector store index using the specified embedding model
+    index = VectorStoreIndex.from_documents([document], embedding_model=embedding_model)
     
     return index
 
