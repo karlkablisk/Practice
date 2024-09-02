@@ -1,89 +1,102 @@
 import os
-import openai
 import streamlit as st
+import openai
+import faiss
 import numpy as np
-from scipy.spatial.distance import cosine
-from openai import OpenAI
+from langchain.docstore.in_memory import InMemoryDocstore
+from langchain.vectorstores import FAISS
+from langchain.embeddings.openai import OpenAIEmbeddings
+from langchain.text_splitter import RecursiveCharacterTextSplitter
+from langchain import Document
 import tiktoken  # For token count
+import json
+
 
 class OpenAIStreamlitApp:
     def __init__(self):
-        # Initialize the OpenAI client with the API key from the environment variable
-        self.client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
+        self.client = openai.OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
+        self.embeddings = OpenAIEmbeddings(model="text-embedding-ada-002")
 
-    def get_embedding(self, text, model="text-embedding-3-small"):
-        """Generate an embedding for the input text."""
-        response = openai.embeddings.create(
-            input=[text],
-            model=model
-        )
-        embedding = response.data[0].embedding
-        st.write(f"Embedding summary: Length = {len(embedding)}, First 5 values = {embedding[:5]}")
-        return embedding
+    def analyze_metadata(self, text):
+        """Analyze and create metadata for the given text."""
+        metadata = {
+            "length": len(text),
+            "token_count": self.count_tokens(text),
+            "has_toc": self.detect_table_of_contents(text),
+            "page_count": self.detect_page_count(text),
+        }
+        st.warning(f"Metadata created: {json.dumps(metadata, indent=2)}")
+        return metadata
 
-    def search_context(self, contexts, query, model="text-embedding-3-small"):
-        """Search the most relevant context based on the cosine similarity of embeddings."""
-        query_embedding = self.get_embedding(query, model=model)
-        similarities = [
-            1 - cosine(np.array(self.get_embedding(context, model=model)), np.array(query_embedding))
-            for context in contexts
-        ]
-        top_index = np.argmax(similarities)
-        return contexts[top_index]
+    def detect_table_of_contents(self, text):
+        """Detect if there's a table of contents and its structure."""
+        patterns = ["Table of Contents", "Contents", "Chapter", "Section"]
+        toc_detected = any(pattern in text for pattern in patterns)
+        if toc_detected:
+            st.warning("Table of Contents detected.")
+        return toc_detected
 
-    def count_tokens(self, text, model="gpt-4o-mini"):
+    def detect_page_count(self, text):
+        """Estimate the number of pages based on markers."""
+        pages = text.count("[start of page")
+        st.warning(f"Estimated page count: {pages}")
+        return pages
+
+    def count_tokens(self, text, model="text-embedding-ada-002"):
         """Count the number of tokens in the given text."""
         enc = tiktoken.encoding_for_model(model)
         return len(enc.encode(text))
 
-    def generate_text(self, prompt, model="gpt-4o-mini", max_tokens=1500):
-        """Uses the specified GPT model to generate a response based on the input prompt."""
-        try:
-            total_tokens = self.count_tokens(prompt, model=model) + max_tokens
-            if total_tokens > 8192:  # Example limit, adjust based on your model
-                raise ValueError(f"Total token count exceeds the model's limit: {total_tokens} tokens")
+    def chunk_text(self, text):
+        """Chunk the text and create metadata for each chunk."""
+        splitter = RecursiveCharacterTextSplitter(chunk_size=1000, chunk_overlap=200)
+        chunks = splitter.split_text(text)
 
-            response = self.client.chat.completions.create(
-                model=model,
-                messages=[{"role": "user", "content": prompt}],
-                max_tokens=max_tokens
-            )
-            return response.choices[0].message.content
+        documents = []
+        for chunk in chunks:
+            metadata = self.analyze_metadata(chunk)
+            documents.append(Document(page_content=chunk, metadata=metadata))
 
-        except openai.error.OpenAIError as e:
-            st.error(f"OpenAI API Error: {str(e)}")
-        except Exception as e:
-            st.error(f"Error generating text: {str(e)}")
+        st.warning(f"{len(chunks)} chunks created.")
+        return documents
 
-    def generate_answer(self, context, question, model="gpt-4o-mini"):
-        """Generate an answer using the most relevant context."""
-        prompt = f"""Use the below context to answer the question. If the answer cannot be found, write 'I don't know.'
+    def create_vectorstore(self, documents):
+        """Create a FAISS vectorstore and add documents."""
+        index = faiss.IndexFlatL2(len(self.embeddings.embed_query("sample text")))
+        vector_store = FAISS(
+            embedding_function=self.embeddings,
+            index=index,
+            docstore=InMemoryDocstore(),
+            index_to_docstore_id={},
+        )
+        uuids = [str(uuid4()) for _ in range(len(documents))]
+        vector_store.add_documents(documents=documents, ids=uuids)
+        st.warning("Vectorstore created and documents added.")
+        return vector_store
 
-        Context:
-        {context}
-
-        Question: {question}
-        """
-        return self.generate_text(prompt, model=model)
+    def search_vectorstore(self, vector_store, query):
+        """Search the vectorstore for the most relevant chunks."""
+        results = vector_store.similarity_search(query, k=3)
+        for res in results:
+            st.write(f"Chunk: {res.page_content} \nMetadata: {res.metadata}")
 
     def run(self):
-        st.title("Question Answering with OpenAI Embeddings")
+        st.title("Document Analysis and Metadata with FAISS")
 
-        text_input = st.text_area("Text Contexts", height=200)
-        contexts = text_input.split("\n\n")
+        text_input = st.text_area("Paste your document here", height=200)
 
-        question = st.text_input("Enter your question:")
-
-        if st.button("Get Answer"):
-            if contexts and question:
-                with st.spinner('Searching for the most relevant context...'):
-                    best_context = self.search_context(contexts, question)
-                    with st.spinner('Generating the answer...'):
-                        answer = self.generate_answer(best_context, question)
-                        if answer:
-                            st.write("Answer:", answer)
+        if st.button("Process Document"):
+            if text_input:
+                with st.spinner('Processing and chunking the document...'):
+                    documents = self.chunk_text(text_input)
+                    vector_store = self.create_vectorstore(documents)
+                    
+                    query = st.text_input("Enter your query:")
+                    if query:
+                        self.search_vectorstore(vector_store, query)
             else:
-                st.write("Please provide both contexts and a question.")
+                st.write("Please paste a document to process.")
+
 
 if __name__ == "__main__":
     app = OpenAIStreamlitApp()
