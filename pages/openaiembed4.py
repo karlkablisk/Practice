@@ -94,21 +94,24 @@ class OpenAIStreamlitApp:
     def search_context(self, documents, query, model="text-embedding-3-small"):
         relevant_context = ""
         for doc in documents:
-            if (query.lower() in (doc.metadata.get("chapter") or "").lower() or
+            if (
+                query.lower() in (doc.metadata.get("chapter") or "").lower() or
                 query.lower() in (doc.metadata.get("section") or "").lower() or
-                query.lower() in (doc.metadata.get("title") or "").lower()):
+                query.lower() in (doc.metadata.get("title") or "").lower() or
+                query.lower() in str(doc.metadata.get("page", "")).lower()
+            ):
                 relevant_context += doc.page_content + "\n"
 
-        if not relevant_context.strip():
-            query_embedding = self.get_embedding(query, model=model)
-            similarities = [
-                1 - cosine(np.array(self.get_embedding(doc.page_content, model=model)), np.array(query_embedding))
-                for doc in documents
-            ]
-            top_index = np.argmax(similarities)
-            return documents[top_index].page_content
+        if relevant_context.strip():
+            return relevant_context.strip()
 
-        return relevant_context.strip()
+        query_embedding = self.get_embedding(query, model=model)
+        similarities = [
+            1 - cosine(np.array(self.get_embedding(doc.page_content, model=model)), np.array(query_embedding))
+            for doc in documents
+        ]
+        top_index = np.argmax(similarities)
+        return documents[top_index].page_content
 
     def generate_text(self, prompt, model="gpt-4o-mini", max_tokens=1500):
         total_tokens = self.count_tokens(prompt, model=model) + max_tokens
@@ -145,9 +148,9 @@ class OpenAIStreamlitApp:
         with st.sidebar:
             st.header("Instructions")
             st.write("""
-                1. **Paste your document** in the text area below.
-                2. Click on **Process Document** to chunk and analyze it.
-                3. **Ask questions** about the document using the chat input at the bottom.
+                 1. **Paste your document** in the text area below.
+                 2. Click on **Process Document** to chunk and analyze it.
+                 3. **Ask questions** about the document using the chat input at the bottom.
             """)
 
         text_input = st.text_area("📋 Paste your document here", height=300)
@@ -183,7 +186,6 @@ class OpenAIStreamlitApp:
                         st.markdown("**Answer:** Unable to generate an answer.")
         else:
             st.info("⚠️ Please process a document first to enable question answering.")
-
 
 if __name__ == "__main__":
     app = OpenAIStreamlitApp()
