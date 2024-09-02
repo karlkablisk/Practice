@@ -86,6 +86,11 @@ class OpenAIStreamlitApp:
         st.write(f"Embedding summary: Length = {len(embedding)}, First 5 values = {embedding[:5]}")
         return embedding
 
+    def count_tokens(self, text, model="gpt-4o-mini"):
+        """Count the number of tokens in the given text using the specified model."""
+        enc = tiktoken.encoding_for_model(model)
+        return len(enc.encode(text))
+
     def search_context(self, documents, query, model="text-embedding-3-small"):
         relevant_context = ""
         for doc in documents:
