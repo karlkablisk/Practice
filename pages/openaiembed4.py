@@ -15,8 +15,8 @@ import tiktoken  # For token count
 
 class OpenAIStreamlitApp:
     def __init__(self):
-        # Set up OpenAI API key
-        openai.api_key = os.getenv("OPENAI_API_KEY")
+        # Initialize the OpenAI client with the API key from the environment variable
+        self.client = openai.OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
         self.embeddings = OpenAIEmbeddings(model="text-embedding-3-small")
 
     def analyze_metadata(self, text):
@@ -74,7 +74,10 @@ class OpenAIStreamlitApp:
 
     def get_embedding(self, text, model="text-embedding-3-small"):
         """Generate an embedding for the input text."""
-        response = openai.Embedding.create(input=[text], model=model)
+        response = openai.embeddings.create(
+            input=[text],
+            model=model
+        )
         embedding = response.data[0].embedding
         st.write(f"Embedding summary: Length = {len(embedding)}, First 5 values = {embedding[:5]}")
         return embedding
@@ -94,14 +97,24 @@ class OpenAIStreamlitApp:
         enc = tiktoken.encoding_for_model(model)
         return len(enc.encode(text))
 
-    def generate_text(self, prompt, model="gpt-4o-mini", max_tokens=150):
+    def generate_text(self, prompt, model="gpt-4o-mini", max_tokens=1500):
         """Uses the specified GPT model to generate a response based on the input prompt."""
-        response = openai.ChatCompletion.create(
-            model=model,
-            messages=[{"role": "user", "content": prompt}],
-            max_tokens=max_tokens
-        )
-        return response.choices[0].message['content']
+        try:
+            total_tokens = self.count_tokens(prompt, model=model) + max_tokens
+            if total_tokens > 8192:  # Example limit, adjust based on your model
+                raise ValueError(f"Total token count exceeds the model's limit: {total_tokens} tokens")
+
+            response = self.client.chat.completions.create(
+                model=model,
+                messages=[{"role": "user", "content": prompt}],
+                max_tokens=max_tokens
+            )
+            return response.choices[0].message.content
+
+        except openai.error.OpenAIError as e:
+            st.error(f"OpenAI API Error: {str(e)}")
+        except Exception as e:
+            st.error(f"Error generating text: {str(e)}")
 
     def generate_answer(self, context, question, model="gpt-4o-mini"):
         """Generate an answer using the most relevant context."""
