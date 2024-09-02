@@ -15,9 +15,9 @@ import tiktoken  # For token count
 
 class OpenAIStreamlitApp:
     def __init__(self):
-        openai.api_key = os.getenv("OPENAI_API_KEY")
+        # Initialize the OpenAI client with the API key from the environment variable
+        self.client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
         self.embeddings = OpenAIEmbeddings(model="text-embedding-3-small")
-        self.gpt_model = "gpt-4o-mini"
 
     def analyze_metadata(self, text):
         """Analyze and create relevant metadata for the given text."""
@@ -89,6 +89,11 @@ class OpenAIStreamlitApp:
         top_index = np.argmax(similarities)
         return contexts[top_index]
 
+    def count_tokens(self, text, model="gpt-4o-mini"):
+        """Count the number of tokens in the given text."""
+        enc = tiktoken.encoding_for_model(model)
+        return len(enc.encode(text))
+
     def generate_text(self, prompt, model="gpt-4o-mini", max_tokens=1500):
         """Uses the specified GPT model to generate a response based on the input prompt."""
         try:
@@ -96,7 +101,7 @@ class OpenAIStreamlitApp:
             if total_tokens > 8192:  # Example limit, adjust based on your model
                 raise ValueError(f"Total token count exceeds the model's limit: {total_tokens} tokens")
 
-            response = openai.ChatCompletion.create(
+            response = self.client.chat.completions.create(
                 model=model,
                 messages=[{"role": "user", "content": prompt}],
                 max_tokens=max_tokens
@@ -108,7 +113,7 @@ class OpenAIStreamlitApp:
         except Exception as e:
             st.error(f"Error generating text: {str(e)}")
 
-    def generate_answer(self, context, question):
+    def generate_answer(self, context, question, model="gpt-4o-mini"):
         """Generate an answer using the most relevant context."""
         prompt = f"""Use the below context to answer the question. If the answer cannot be found, write 'I don't know.'
 
@@ -117,7 +122,7 @@ class OpenAIStreamlitApp:
 
         Question: {question}
         """
-        return self.generate_text(prompt, model=self.gpt_model)
+        return self.generate_text(prompt, model=model)
 
     def run(self):
         st.title("📄 Document Analysis and Retrieval-Augmented Generation (RAG) with FAISS")
