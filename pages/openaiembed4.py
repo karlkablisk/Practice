@@ -11,7 +11,7 @@ from langchain.schema import Document
 from uuid import uuid4  # Import uuid4 for generating unique IDs
 from scipy.spatial.distance import cosine  # For cosine similarity
 import tiktoken  # For token count
- 
+
 
 class OpenAIStreamlitApp:
     def __init__(self):
@@ -19,22 +19,34 @@ class OpenAIStreamlitApp:
         self.client = openai.OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
         self.embeddings = OpenAIEmbeddings(model="text-embedding-3-small")
 
+    def detect_toc_with_gpt(self, text_excerpt, model="gpt-4o-mini"):
+        """Use GPT-4o mini to determine if there is a Table of Contents."""
+        prompt = f"""The following text is from the beginning of a document. Please determine if it contains a Table of Contents. Answer with 'True' or 'False'.
+
+        Text:
+        {text_excerpt}
+
+        Does this text contain a Table of Contents?"""
+        
+        response = self.client.chat.completions.create(
+            model=model,
+            messages=[{"role": "user", "content": prompt}],
+            max_tokens=10  # Keep token usage minimal
+        )
+        
+        answer = response.choices[0].message['content'].strip().lower()
+        return answer == 'true'
+
     def analyze_metadata(self, text):
         """Analyze and create relevant metadata for the given text."""
+        toc_text_excerpt = text[:1000]  # Limit to 1000 characters to be token-efficient
+        has_toc = self.detect_toc_with_gpt(toc_text_excerpt)
         metadata = {
-            "has_toc": self.detect_table_of_contents(text),
+            "has_toc": has_toc,
             "pages": self.detect_pages(text),
         }
         st.info(f"Metadata created: {metadata}")
         return metadata
-
-    def detect_table_of_contents(self, text):
-        """Detect if there's a table of contents and its structure."""
-        toc_start_markers = ["Table of Contents", "Contents", "Chapter"]
-        toc_detected = any(marker.lower() in text.lower() for marker in toc_start_markers)
-        if toc_detected:
-            st.info("Table of Contents detected.")
-        return toc_detected
 
     def detect_pages(self, text):
         """Identify and map page numbers based on [start of page x] and [end of page x] markers."""
