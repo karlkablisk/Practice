@@ -1,3 +1,4 @@
+#langchain and openai embedding faiss vectorstore working
 import os
 import streamlit as st
 import openai
