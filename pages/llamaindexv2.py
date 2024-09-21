@@ -61,7 +61,9 @@ if "chat_engine" not in st.session_state.keys():
         Keep your answers factual and related to the text. Do not provide information outside of the document's content.""",
     )
     st.session_state.chat_engine = index.as_chat_engine(
-        chat_mode="condense_question", verbose=True, streaming=True
+        llm = OpenAI(model="gpt-4o-mini")  # Set the model to GPT-4o-mini
+        #chat_mode="condense_question", verbose=True, streaming=True
+        chat_mode="condense_question", llm=llm, verbose=True, streaming=True
     )
 
 # Prompt for user input and save to chat history
